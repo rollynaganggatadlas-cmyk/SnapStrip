@@ -78,6 +78,40 @@ const PhotoStripModule = (() => {
       swatch: 'linear-gradient(135deg,#8B5A2B,#C68B59)',
       draw: drawGingerbread,
     },
+    // 🔥 NEW FRAMES ADDED BELOW
+    {
+      id: 'cinema',
+      name: 'Cinema',
+      bg: '#000000',
+      border: '#333333',
+      accent: '#FFF8E7',
+      text: '#FFF8E7',
+      subText: '#888888',
+      swatch: 'linear-gradient(135deg,#000000,#333333)',
+      draw: drawCinema,
+    },
+    {
+      id: 'polaroid',
+      name: 'Polaroid',
+      bg: '#F4F4F4',
+      border: '#E0E0E0',
+      accent: '#333333',
+      text: '#333333',
+      subText: '#666666',
+      swatch: 'linear-gradient(135deg,#FFFFFF,#E0E0E0)',
+      draw: drawPolaroid,
+    },
+    {
+      id: 'neon-night',
+      name: 'Neon Night',
+      bg: '#0a0014',
+      border: '#ff00ff',
+      accent: '#00ffff',
+      text: '#00ffff',
+      subText: '#ff00ff',
+      swatch: 'linear-gradient(135deg,#0a0014,#ff00ff)',
+      draw: drawNeonNight,
+    }
   ];
 
   function getFrames() { return FRAMES; }
@@ -261,6 +295,61 @@ const PhotoStripModule = (() => {
       ctx.fill();
     });
     drawSnowflakes(ctx, 10, '#FFF8E7', 0.3);
+  }
+
+  // 🔥 NEW DRAWING FUNCTIONS
+
+  function drawCinema(ctx) {
+    // Solid black background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    
+    // Top and bottom "Letterbox" bars
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(0, 0, STRIP_W, 80);
+    ctx.fillRect(0, STRIP_H - 80, STRIP_W, 80);
+    
+    // Subtle film grain (dots)
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    for(let i=0; i<500; i++) {
+      ctx.fillRect(Math.random() * STRIP_W, Math.random() * STRIP_H, 2, 2);
+    }
+  }
+
+  function drawPolaroid(ctx) {
+    // Vintage off-white background
+    ctx.fillStyle = '#F4F4F4';
+    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    
+    // Inner border
+    ctx.strokeStyle = '#D0D0D0';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(15, 15, STRIP_W - 30, STRIP_H - 30);
+    
+    // Tape effect at the top
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+    ctx.fillRect(STRIP_W/2 - 60, 0, 120, 40);
+  }
+
+  function drawNeonNight(ctx) {
+    // Dark purple background
+    ctx.fillStyle = '#0a0014';
+    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    
+    // Glowing neon border
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 20;
+    ctx.strokeStyle = '#ff00ff';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(20, 20, STRIP_W - 40, STRIP_H - 40);
+    
+    // Reset shadow
+    ctx.shadowBlur = 0;
+    
+    // Cyan inner accent line
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(35, 35, STRIP_W - 70, STRIP_H - 70);
   }
 
   /* ---------------- Strip composition ---------------- */
