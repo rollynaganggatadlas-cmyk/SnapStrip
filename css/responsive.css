@@ -1,0 +1,99 @@
+/* ============================================================
+   SnapStrip – Responsive adjustments
+   ============================================================ */
+
+/* ---------- Small phones ---------- */
+@media (max-width: 380px) {
+  .steps { grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+  .filter-grid, .frame-grid { grid-template-columns: repeat(2, 1fr); }
+  .shutter-btn { width: 64px; height: 64px; }
+  .shutter-inner { width: 48px; height: 48px; }
+  .control-row { gap: 0.7rem; }
+  .control-row .btn-ghost { font-size: 0.78rem; padding: 0.55rem 0.7rem; }
+}
+
+/* ---------- Mobile portrait ---------- */
+@media (max-width: 600px) {
+  .landing-content { padding: 0 0.25rem; }
+  .how-it-works { padding: 1rem; }
+
+  .camera-stage { padding: 0.5rem; }
+  .video-wrap {
+    max-width: 100%;
+    aspect-ratio: 3 / 4;
+    max-height: 60vh;
+  }
+
+  .customize-body {
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+  .preview-pane { width: 100%; }
+  .strip-preview-wrap { max-width: 220px; }
+  .options-pane { max-width: 100%; flex: 1 1 auto; }
+
+  .final-preview-wrap { max-width: 250px; }
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .video-wrap { max-width: 520px; }
+  .customize-body { gap: 1.2rem; }
+  .strip-preview-wrap { max-width: 240px; }
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 1025px) {
+  .camera-stage { padding: 1.5rem; }
+  .video-wrap {
+    max-width: 600px;
+    max-height: calc(100vh - 260px);
+    aspect-ratio: 3 / 4;
+  }
+  .camera-controls { padding: 0.8rem 1.5rem 1.6rem; }
+
+  .customize-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    gap: 2.5rem;
+    padding: 1.5rem;
+  }
+  .strip-preview-wrap { max-width: 300px; }
+  .options-pane { max-width: 560px; }
+
+  .final-body { gap: 1.8rem; padding: 2rem; }
+  .final-preview-wrap { max-width: 320px; }
+  .final-actions { max-width: 360px; }
+}
+
+/* ---------- Landscape phones (short height) ---------- */
+@media (max-height: 600px) and (orientation: landscape) {
+  .camera-stage { padding: 0.4rem; }
+  .video-wrap {
+    aspect-ratio: auto;
+    height: 55vh;
+    width: auto;
+    max-width: 90vw;
+  }
+  .camera-controls { padding: 0.4rem 1rem 0.6rem; }
+  .progress-dots { display: none; }
+  .camera-hint { display: none; }
+  .pose-guide-img { width: 34%; }
+}
+
+/* ---------- Reduced motion ---------- */  
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Print / accessibility ---------- */
+@media (prefers-contrast: more) {
+  .btn-ghost { border-color: var(--cream); }
+  .pose-instruction { background: rgba(0,0,0,0.85); }
+}

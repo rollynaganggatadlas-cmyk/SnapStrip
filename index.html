@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#B22222">
+  <meta name="description" content="SnapStrip – Christmas Edition. Capture your little Christmas moments with a festive digital photobooth.">
+  <title>SnapStrip – Christmas Edition</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/camera.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Nunito:wght@300;400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Snowfall Canvas (global decoration) -->
+  <canvas id="snowfall" aria-hidden="true"></canvas>
+
+  <!-- ============ LANDING PAGE ============ -->
+  <section id="landing" class="screen active">
+    <div class="landing-decor">
+      <div class="string-lights" aria-hidden="true"></div>
+      <div class="ornament ornament-1" aria-hidden="true">🎄</div>
+      <div class="ornament ornament-2" aria-hidden="true">🎁</div>
+      <div class="ornament ornament-3" aria-hidden="true">⭐</div>
+      <div class="ornament ornament-4" aria-hidden="true">🔔</div>
+    </div>
+
+    <div class="landing-content">
+      <div class="logo-wrap">
+        <span class="logo-snowflake" aria-hidden="true">❄</span>
+        <h1 class="logo">Snap<span class="logo-accent">Strip</span></h1>
+        <span class="logo-edition">Christmas Edition</span>
+      </div>
+
+      <h2 class="landing-heading">Merry Christmas!</h2>
+      <p class="landing-subtitle">Capture your little Christmas moments.</p>
+
+      <button id="start-btn" class="btn btn-primary btn-large">
+        <span>Start Photobooth</span>
+        <span class="btn-icon" aria-hidden="true">📸</span>
+      </button>
+
+      <div class="how-it-works">
+        <h3>How it works</h3>
+        <div class="steps">
+          <div class="step"><span class="step-num">1</span><span>Allow camera access</span></div>
+          <div class="step"><span class="step-num">2</span><span>Follow 4 fun poses</span></div>
+          <div class="step"><span class="step-num">3</span><span>Pick a filter &amp; frame</span></div>
+          <div class="step"><span class="step-num">4</span><span>Download your strip!</span></div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="landing-footer">
+      <span>Made with 🎄 &amp; ❄️ for the holidays</span>
+    </footer>
+  </section>
+
+  <!-- ============ CAMERA INTERFACE ============ -->
+  <section id="camera-screen" class="screen">
+    <header class="camera-header">
+      <button id="back-to-landing" class="icon-btn" aria-label="Back to home">←</button>
+      <div class="camera-title">SnapStrip</div>
+      <button id="flip-camera" class="icon-btn" aria-label="Flip camera" title="Flip camera">🔄</button>
+    </header>
+
+    <div class="camera-stage">
+      <!-- Live video -->
+      <div class="video-wrap" id="video-wrap">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="flash-canvas" class="flash-canvas"></canvas>
+
+        <!-- Pose guide overlay -->
+        <div class="pose-overlay" id="pose-overlay">
+          <div class="pose-badge" id="pose-badge">POSE 1 OF 4</div>
+          <div class="pose-instruction" id="pose-instruction">Point at the camera and wink.</div>
+          <img class="pose-guide-img" id="pose-guide-img" src="assets/poses/pointing.svg" alt="Pose guide" draggable="false">
+        </div>
+
+        <!-- Countdown -->
+        <div class="countdown-overlay" id="countdown-overlay" aria-live="polite">
+          <span id="countdown-number"></span>
+        </div>
+
+        <!-- Permission / error overlay -->
+        <div class="camera-message" id="camera-message">
+          <div class="message-card">
+            <div class="message-icon" id="message-icon">📷</div>
+            <h3 id="message-title">Camera access needed</h3>
+            <p id="message-text">We need your permission to use the camera so you can see yourself while posing.</p>
+            <button id="retry-camera" class="btn btn-primary">Enable Camera</button>
+          </div>
+        </div>
+
+        <!-- Capture counter -->
+        <div class="capture-counter" id="capture-counter">0 / 4</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="camera-controls">
+      <div class="progress-dots" id="progress-dots">
+        <span class="dot" data-i="0"></span>
+        <span class="dot" data-i="1"></span>
+        <span class="dot" data-i="2"></span>
+        <span class="dot" data-i="3"></span>
+      </div>
+
+      <div class="control-row">
+        <button id="retake-btn" class="btn btn-ghost" disabled>↺ Retake</button>
+        <button id="shoot-btn" class="shutter-btn" aria-label="Take photo">
+          <span class="shutter-inner"></span>
+        </button>
+        <button id="skip-btn" class="btn btn-ghost">Skip →</button>
+      </div>
+
+      <p class="camera-hint" id="camera-hint">Get ready — the countdown starts automatically.</p>
+    </div>
+  </section>
+
+  <!-- ============ CUSTOMIZE SCREEN ============ -->
+  <section id="customize-screen" class="screen">
+    <header class="customize-header">
+      <button id="back-to-camera" class="icon-btn" aria-label="Back to camera">←</button>
+      <h2>Customize Your Strip</h2>
+      <div class="spacer"></div>
+    </header>
+
+    <div class="customize-body">
+      <!-- Left: preview of strip -->
+      <div class="preview-pane">
+        <div class="strip-preview-wrap">
+          <canvas id="strip-preview" width="600" height="1800"></canvas>
+        </div>
+      </div>
+
+      <!-- Right: options -->
+      <div class="options-pane">
+        <div class="option-group">
+          <h3>Filter</h3>
+          <div class="filter-grid" id="filter-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <div class="option-group">
+          <h3>Frame</h3>
+          <div class="frame-grid" id="frame-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <div class="option-group">
+          <h3>Title</h3>
+          <input id="strip-title" class="text-input" type="text" maxlength="24" value="Merry Christmas" placeholder="Your title...">
+        </div>
+
+        <div class="option-group toggle-group">
+          <label class="toggle">
+            <input type="checkbox" id="show-date" checked>
+            <span class="toggle-slider"></span>
+            <span>Show date &amp; time</span>
+          </label>
+        </div>
+
+        <div class="option-actions">
+          <button id="generate-btn" class="btn btn-primary btn-large">Generate Photo Strip</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL SCREEN ============ -->
+  <section id="final-screen" class="screen">
+    <header class="final-header">
+      <h2>Your Christmas Strip 🎄</h2>
+    </header>
+
+    <div class="final-body">
+      <div class="final-preview-wrap">
+        <canvas id="strip-final" width="600" height="1800"></canvas>
+      </div>
+
+      <div class="final-actions">
+        <button id="download-btn" class="btn btn-primary btn-large">
+          <span>Download Photo Strip</span>
+          <span class="btn-icon" aria-hidden="true">⬇️</span>
+        </button>
+        <button id="retake-photos-btn" class="btn btn-secondary">Retake Photos</button>
+        <button id="another-strip-btn" class="btn btn-ghost">Create Another Strip</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hidden canvas used for raw frame capture -->
+  <canvas id="capture-canvas" class="hidden"></canvas>
+
+  <script src="js/app.js"></script>
+  <script src="js/camera.js"></script>
+  <script src="js/pose-guide.js"></script>
+  <script src="js/countdown.js"></script>
+  <script src="js/capture.js"></script>
+  <script src="js/filters.js"></script>
+  <script src="js/photostrip.js"></script>
+  <script src="js/download.js"></script>
+</body>
+</html>

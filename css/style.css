@@ -1,0 +1,310 @@
+/* ============================================================
+   SnapStrip – Christmas Edition
+   Base styles, landing page, typography, snow
+   ============================================================ */
+
+:root {
+  --red: #B22222;
+  --red-dark: #8B1A1A;
+  --green: #174B35;
+  --green-light: #23684A;
+  --cream: #FFF8E7;
+  --gold: #D4AF37;
+  --gold-light: #F0D77A;
+  --white: #FFFFFF;
+  --brown: #75513B;
+  --shadow: rgba(0, 0, 0, 0.18);
+  --font-display: 'Mountains of Christmas', cursive;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-body: 'Nunito', system-ui, -apple-system, sans-serif;
+  --radius: 18px;
+  --transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--green);
+  color: var(--cream);
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Snow canvas behind everything */
+#snowfall {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Screens */
+.screen {
+  display: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  z-index: 2;
+  flex-direction: column;
+}
+.screen.active {
+  display: flex;
+}
+
+/* ============ BUTTONS ============ */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 50px;
+  padding: 0.85rem 1.6rem;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  user-select: none;
+  letter-spacing: 0.02em;
+}
+.btn:active { transform: scale(0.96); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+  color: var(--cream);
+  box-shadow: 0 6px 20px rgba(178, 34, 34, 0.45), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.btn-primary:hover { box-shadow: 0 10px 28px rgba(178, 34, 34, 0.6); transform: translateY(-2px); }
+
+.btn-secondary {
+  background: var(--gold);
+  color: var(--brown);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
+}
+.btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(212, 175, 55, 0.5); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--cream);
+  border: 1.5px solid rgba(255, 248, 231, 0.4);
+}
+.btn-ghost:hover { border-color: var(--cream); background: rgba(255,248,231,0.08); }
+
+.btn-large { font-size: 1.15rem; padding: 1.05rem 2.4rem; }
+
+.icon-btn {
+  background: rgba(255, 248, 231, 0.1);
+  border: 1px solid rgba(255, 248, 231, 0.25);
+  color: var(--cream);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), transform var(--transition);
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: rgba(255, 248, 231, 0.2); }
+.icon-btn:active { transform: scale(0.92); }
+
+/* ============ LANDING PAGE ============ */
+#landing {
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1.25rem;
+  background:
+    radial-gradient(circle at 50% -20%, rgba(212,175,55,0.16), transparent 55%),
+    radial-gradient(circle at 15% 90%, rgba(178,34,34,0.22), transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(178,34,34,0.18), transparent 45%),
+    linear-gradient(170deg, #123a29 0%, #174B35 45%, #103224 100%);
+  text-align: center;
+  overflow: hidden;
+}
+
+.landing-decor { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+
+/* Festive string lights along top */
+.string-lights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-image: radial-gradient(circle, var(--gold) 5px, transparent 6px),
+                    radial-gradient(circle, var(--red) 5px, transparent 6px),
+                    radial-gradient(circle, #2ecc71 5px, transparent 6px);
+  background-size: 60px 20px;
+  background-position: 0 8px, 20px 18px, 40px 4px;
+  background-repeat: repeat-x;
+  filter: drop-shadow(0 0 6px rgba(212,175,55,0.7));
+  animation: twinkle 2.4s ease-in-out infinite alternate;
+  opacity: 0.9;
+}
+@keyframes twinkle {
+  0% { filter: drop-shadow(0 0 4px rgba(212,175,55,0.5)); opacity: 0.75; }
+  100% { filter: drop-shadow(0 0 12px rgba(212,175,55,0.95)); opacity: 1; }
+}
+
+.ornament {
+  position: absolute;
+  font-size: 2.4rem;
+  opacity: 0.55;
+  animation: floaty 6s ease-in-out infinite;
+}
+.ornament-1 { top: 16%; left: 8%; animation-delay: 0s; }
+.ornament-2 { top: 24%; right: 10%; animation-delay: 1.2s; }
+.ornament-3 { bottom: 22%; left: 12%; animation-delay: 2.1s; }
+.ornament-4 { bottom: 28%; right: 14%; animation-delay: 0.7s; }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-16px) rotate(4deg); }
+}
+
+.landing-content {
+  position: relative;
+  z-index: 3;
+  max-width: 680px;
+  width: 100%;
+  animation: fadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.logo-snowflake {
+  font-size: 1.6rem;
+  color: var(--gold-light);
+  animation: spin 9s linear infinite;
+  display: inline-block;
+  margin-bottom: 0.25rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.logo {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 9vw, 4.5rem);
+  font-weight: 700;
+  color: var(--cream);
+  line-height: 1;
+  text-shadow: 0 3px 0 var(--red-dark), 0 6px 22px rgba(0,0,0,0.4);
+  letter-spacing: 0.02em;
+}
+.logo-accent { color: var(--gold); }
+
+.logo-edition {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--gold-light);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-top: 0.35rem;
+}
+
+.landing-heading {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 5.5vw, 2.6rem);
+  color: var(--cream);
+  margin: 1.4rem 0 0.4rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+
+.landing-subtitle {
+  font-size: clamp(0.95rem, 2.6vw, 1.15rem);
+  color: rgba(255, 248, 231, 0.82);
+  margin-bottom: 2.2rem;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+}
+
+#start-btn { margin-bottom: 2.4rem; }
+.btn-icon { font-size: 1.15rem; }
+
+.how-it-works {
+  background: rgba(255, 248, 231, 0.06);
+  border: 1px solid rgba(255, 248, 231, 0.14);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+  backdrop-filter: blur(6px);
+}
+.how-it-works h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--gold-light);
+  margin-bottom: 0.9rem;
+  letter-spacing: 0.04em;
+}
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: rgba(255, 248, 231, 0.85);
+  line-height: 1.25;
+  font-weight: 600;
+}
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--red);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 8px rgba(178,34,34,0.5);
+}
+
+.landing-footer {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(255, 248, 231, 0.5);
+  letter-spacing: 0.05em;
+  z-index: 3;
+}
+
+.hidden { display: none !important; }

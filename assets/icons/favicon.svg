@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#B22222"/>
+  <rect x="8" y="14" width="48" height="40" rx="6" fill="#FFF8E7"/>
+  <circle cx="32" cy="34" r="12" fill="#174B35"/>
+  <circle cx="32" cy="34" r="6" fill="#D4AF37"/>
+  <rect x="24" y="8" width="16" height="8" rx="2" fill="#D4AF37"/>
+  <circle cx="48" cy="20" r="3" fill="#B22222"/>
+  <text x="32" y="58" text-anchor="middle" font-size="10" font-family="Nunito, sans-serif" font-weight="800" fill="#D4AF37">SNAP</text>
+</svg>
