@@ -3,11 +3,9 @@
    ============================================================ */
 
 const PhotoStripModule = (() => {
-  // Canvas size for the 2x2 grid
   const STRIP_W = 1200;
   const STRIP_H = 1500;
   
-  // Sizes for each cell
   const CELL_W = 560;
   const CELL_H = 680;
   const GAP = 20;
@@ -24,169 +22,110 @@ const PhotoStripModule = (() => {
 
   const FRAMES = [
     {
-      id: 'classic-blue',
-      name: 'Classic Blue',
-      bg: '#2A3B5C',
-      text: '#FFFFFF',
-      subText: '#A9B9D1',
-      swatch: 'linear-gradient(135deg,#2A3B5C,#1A263C)',
-      draw: drawClassicBlue,
+      id: 'classic-blue', name: 'Classic Blue', bg: '#2A3B5C', text: '#FFFFFF', subText: '#A9B9D1',
+      swatch: 'linear-gradient(135deg,#2A3B5C,#1A263C)', draw: drawClassicBlue,
     },
     {
-      id: 'classic-red',
-      name: 'Classic Red',
-      bg: '#B22222',
-      text: '#FFF8E7',
-      subText: '#F0D77A',
-      swatch: 'linear-gradient(135deg,#B22222,#8B1A1A)',
-      draw: drawClassicRed,
+      id: 'classic-red', name: 'Classic Red', bg: '#B22222', text: '#FFF8E7', subText: '#F0D77A',
+      swatch: 'linear-gradient(135deg,#B22222,#8B1A1A)', draw: drawClassicRed,
     },
     {
-      id: 'cinema',
-      name: 'Cinema',
-      bg: '#000000',
-      text: '#FFF8E7',
-      subText: '#888888',
-      swatch: 'linear-gradient(135deg,#000000,#333333)',
-      draw: drawCinema,
+      id: 'cinema', name: 'Cinema', bg: '#000000', text: '#FFF8E7', subText: '#888888',
+      swatch: 'linear-gradient(135deg,#000000,#333333)', draw: drawCinema,
     },
   ];
 
   function getFrames() { return FRAMES; }
   function getFrameById(id) { return FRAMES.find(f => f.id === id) || FRAMES[0]; }
 
-  // --- Template Backgrounds ---
   function drawClassicBlue(ctx) {
-    ctx.fillStyle = '#2A3B5C';
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(15, 15, STRIP_W - 30, STRIP_H - 30);
+    ctx.fillStyle = '#2A3B5C'; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 6; ctx.strokeRect(15, 15, STRIP_W - 30, STRIP_H - 30);
   }
-
   function drawClassicRed(ctx) {
-    ctx.fillStyle = '#B22222';
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.strokeStyle = '#D4AF37';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(20, 20, STRIP_W - 40, STRIP_H - 40);
+    ctx.fillStyle = '#B22222'; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 10; ctx.strokeRect(20, 20, STRIP_W - 40, STRIP_H - 40);
   }
-
   function drawCinema(ctx) {
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.fillStyle = '#111111';
-    ctx.fillRect(0, 0, STRIP_W, 60);
-    ctx.fillRect(0, STRIP_H - 60, STRIP_W, 60);
+    ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    ctx.fillStyle = '#111111'; ctx.fillRect(0, 0, STRIP_W, 60); ctx.fillRect(0, STRIP_H - 60, STRIP_W, 60);
   }
 
-  // --- Main Draw Function ---
   function drawStrip(ctx, photos, opts) {
     const frame = getFrameById(opts.frameId);
     const filterId = opts.filterId || 'natural';
     const title = opts.title || 'Merry Christmas';
     const showDate = opts.showDate !== false;
 
-    // 1. Draw background
     frame.draw(ctx);
 
-    // 2. Define the 4 grid positions (Top-Left, Top-Right, Bottom-Left, Bottom-Right)
+    // 4 Grid Positions
     const positions = [
-      { x: MARGIN_X, y: MARGIN_Y },                             // Top Left
-      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y },              // Top Right
-      { x: MARGIN_X, y: MARGIN_Y + CELL_H + GAP },              // Bottom Left
-      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y + CELL_H + GAP }// Bottom Right
+      { x: MARGIN_X, y: MARGIN_Y },                             
+      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y },              
+      { x: MARGIN_X, y: MARGIN_Y + CELL_H + GAP },              
+      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y + CELL_H + GAP }
     ];
 
-    // 3. Load all images (User photos + Memes)
-    const poses = PoseGuideModule.getPoses();
     const loadPromises = [];
 
     for (let i = 0; i < 4; i++) {
       const userPhotoUrl = photos[i];
-      const memeUrl = (opts.customImages && opts.customImages[i]) ? opts.customImages[i] : poses[i].image;
-      
+      const memeUrl = opts.customImages[i];
       const pos = positions[i];
 
-      // Left side (User Photo)
+      // Left: User Photo
       loadPromises.push(new Promise((resolve) => {
         if (!userPhotoUrl) { resolve(); return; }
         const img = new Image();
         img.onload = () => {
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(pos.x, pos.y, (CELL_W/2)-2, CELL_H);
-          ctx.clip();
+          ctx.save(); ctx.beginPath(); ctx.rect(pos.x, pos.y, (CELL_W/2)-2, CELL_H); ctx.clip();
           
-          // Cover-fit
           const imgRatio = img.width / img.height;
           const slotRatio = (CELL_W/2) / CELL_H;
           let sx, sy, sw, sh;
-          if (imgRatio > slotRatio) {
-            sh = img.height; sw = sh * slotRatio;
-            sx = (img.width - sw) / 2; sy = 0;
-          } else {
-            sw = img.width; sh = sw / slotRatio;
-            sx = 0; sy = (img.height - sh) / 2;
-          }
+          if (imgRatio > slotRatio) { sh = img.height; sw = sh * slotRatio; sx = (img.width - sw) / 2; sy = 0; }
+          else { sw = img.width; sh = sw / slotRatio; sx = 0; sy = (img.height - sh) / 2; }
           
           const f = FiltersModule.getById(filterId);
           if (f.css && f.css !== 'none') ctx.filter = f.css;
           ctx.drawImage(img, sx, sy, sw, sh, pos.x, pos.y, (CELL_W/2)-2, CELL_H);
-          ctx.restore();
-          resolve();
+          ctx.restore(); resolve();
         };
-        img.onerror = () => resolve();
-        img.src = userPhotoUrl;
+        img.onerror = () => resolve(); img.src = userPhotoUrl;
       }));
 
-      // Right side (Reference Meme)
+      // Right: Meme
       loadPromises.push(new Promise((resolve) => {
         if (!memeUrl) { resolve(); return; }
         const img = new Image();
         img.onload = () => {
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(pos.x + (CELL_W/2) + 4, pos.y, (CELL_W/2)-2, CELL_H);
-          ctx.clip();
+          ctx.save(); ctx.beginPath(); ctx.rect(pos.x + (CELL_W/2) + 4, pos.y, (CELL_W/2)-2, CELL_H); ctx.clip();
           
-          // Cover-fit meme
           const imgRatio = img.width / img.height;
           const slotRatio = (CELL_W/2) / CELL_H;
           let sx, sy, sw, sh;
-          if (imgRatio > slotRatio) {
-            sh = img.height; sw = sh * slotRatio;
-            sx = (img.width - sw) / 2; sy = 0;
-          } else {
-            sw = img.width; sh = sw / slotRatio;
-            sx = 0; sy = (img.height - sh) / 2;
-          }
+          if (imgRatio > slotRatio) { sh = img.height; sw = sh * slotRatio; sx = (img.width - sw) / 2; sy = 0; }
+          else { sw = img.width; sh = sw / slotRatio; sx = 0; sy = (img.height - sh) / 2; }
           
           ctx.drawImage(img, sx, sy, sw, sh, pos.x + (CELL_W/2) + 4, pos.y, (CELL_W/2)-2, CELL_H);
-          ctx.restore();
-          resolve();
+          ctx.restore(); resolve();
         };
-        img.onerror = () => resolve();
-        img.src = memeUrl;
+        img.onerror = () => resolve(); img.src = memeUrl;
       }));
     }
 
     return Promise.all(loadPromises).then(() => {
-      // 4. Draw Text
       ctx.save();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = '700 50px "Mountains of Christmas", "Playfair Display", cursive';
-      ctx.fillStyle = frame.text;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 50px "Mountains of Christmas", "Playfair Display", cursive'; ctx.fillStyle = frame.text;
       ctx.fillText(title, STRIP_W / 2, 70);
       ctx.restore();
 
       if (showDate) {
         ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '600 24px "Nunito", sans-serif';
-        ctx.fillStyle = frame.subText;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '600 24px "Nunito", sans-serif'; ctx.fillStyle = frame.subText;
         const now = new Date();
         const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
         const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -196,7 +135,6 @@ const PhotoStripModule = (() => {
     });
   }
 
-  // --- Preview & Final ---
   function renderPreview() {
     const photos = SnapStrip.state.photos.length ? SnapStrip.state.photos : PoseGuideModule.getPhotos();
     const opts = {
@@ -204,7 +142,7 @@ const PhotoStripModule = (() => {
       filterId: SnapStrip.state.selectedFilter,
       title: SnapStrip.state.title,
       showDate: SnapStrip.state.showDate,
-      customImages: PoseGuideModule.getPhotos() // Pull the custom memes
+      customImages: PoseGuideModule.getCustomImages()
     };
     previewCtx.clearRect(0, 0, STRIP_W, STRIP_H);
     drawStrip(previewCtx, photos, opts);
@@ -217,13 +155,12 @@ const PhotoStripModule = (() => {
       filterId: SnapStrip.state.selectedFilter,
       title: SnapStrip.state.title,
       showDate: SnapStrip.state.showDate,
-      customImages: PoseGuideModule.getPhotos()
+      customImages: PoseGuideModule.getCustomImages()
     };
     finalCtx.clearRect(0, 0, STRIP_W, STRIP_H);
     drawStrip(finalCtx, photos, opts);
   }
 
-  // --- Build UI ---
   function buildFilterGrid() {
     const grid = document.getElementById('filter-grid');
     if (!grid) return;
@@ -262,11 +199,7 @@ const PhotoStripModule = (() => {
     });
   }
 
-  function init() {
-    buildFilterGrid();
-    buildFrameGrid();
-  }
-
+  function init() { buildFilterGrid(); buildFrameGrid(); }
   document.addEventListener('DOMContentLoaded', () => { init(); });
 
   return { getFrames, getFrameById, renderPreview, generateFinal, init, STRIP_W, STRIP_H };
