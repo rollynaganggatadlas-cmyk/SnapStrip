@@ -35,22 +35,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ---------- Landing ---------- */
 /* ---------- Landing ---------- */
+/* ---------- Landing ---------- */
 function initLanding() {
   const startBtn = document.getElementById('start-btn');
   startBtn.addEventListener('click', () => {
     resetSession();
-    showScreen('camera-screen');
-    
-    // Camera module will request access on screen activation
-    if (window.CameraModule) {
-      window.CameraModule.start();
-    }
-
-    // 🔥 THIS IS THE MISSING FIX: Start the pose guide sequence!
+    showScreen('pose-selection-screen'); // Go to selection first!
     if (window.PoseGuideModule) {
-      window.PoseGuideModule.start();
+      window.PoseGuideModule.buildPreSelectionGrid();
     }
   });
+
+  const backBtn = document.getElementById('back-to-landing-from-select');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      showScreen('landing');
+    });
+  }
 }
 
 function resetSession() {
