@@ -1,160 +1,52 @@
 /* ============================================================
-   SnapStrip – Pose guide system with Pre-Selection
+   SnapStrip – Pose guide overlay
+   Reference image shown bottom-right so it never covers the face.
    ============================================================ */
 
-const PoseGuideModule = (() => {
-  const POSES = [
-    { id: 'p1', title: 'POSE 1 OF 4', instruction: 'Copy the reference image!' },
-    { id: 'p2', title: 'POSE 2 OF 4', instruction: 'Copy the reference image!' },
-    { id: 'p3', title: 'POSE 3 OF 4', instruction: 'Copy the reference image!' },
-    { id: 'p4', title: 'POSE 4 OF 4', instruction: 'Copy the reference image!' }
-  ];
+const PoseGuide = {
+  poses: [],
+  currentIndex: 0,
+  badgeEl: null,
+  instrEl: null,
+  imgEl: null,
 
-  const GALLERY_REFERENCES = [
-    'meme1.jpg', 'meme2.jpg', 'meme3.jpg', 'meme4.jpg', 'meme5.jpg',
-    'meme6.jpg', 'meme7.jpg', 'meme8.jpg', 'meme9.jpg', 'meme10.jpg'
-  ];
+  init() {
+    this.badgeEl = document.getElementById('pose-badge');
+    this.instrEl = document.getElementById('pose-instruction');
+    this.imgEl = document.getElementById('pose-guide-img');
+  },
 
-  const badgeEl = document.getElementById('pose-badge');
-  const instructionEl = document.getElementById('pose-instruction');
-  const guideImgEl = document.getElementById('pose-guide-img');
-  const progressDots = document.querySelectorAll('#progress-dots .dot');
-  const retakeBtn = document.getElementById('retake-btn');
-  
-  const preSelectorGrid = document.getElementById('pre-selector-grid');
-  const startCaptureBtn = document.getElementById('start-capture-btn');
+  setPoses(poses) {
+    this.poses = poses;
+    this.currentIndex = 0;
+  },
 
-  let currentIndex = 0;
-  let photos = [];       
-  let active = false;
-  let customImages = []; 
-
-  function getCurrentIndex() { return currentIndex; }
-  function getPhotos() { return photos.slice(); }
-  function getCustomImages() { return customImages; }
-
-  function setPhoto(index, dataUrl) {
-    photos[index] = dataUrl;
-    updateProgressDots();
-    updateRetakeButton();
-  }
-
-  function updateProgressDots() {
-    progressDots.forEach((dot, i) => {
-      dot.classList.remove('done', 'active');
-      if (i < photos.length && photos[i]) dot.classList.add('done');
-      if (i === currentIndex) dot.classList.add('active');
-    });
-  }
-
-  function updateRetakeButton() {
-    const canRetake = !!photos[currentIndex] && active;
-    retakeBtn.disabled = !canRetake;
-  }
-
-  function buildPreSelectionGrid() {
-    preSelectorGrid.innerHTML = '';
-    customImages = []; 
-    
-    GALLERY_REFERENCES.forEach(imgName => {
-      const img = document.createElement('img');
-      img.src = `assets/poses/${imgName}`;
-      img.className = 'selector-item';
-      
-      img.onclick = () => {
-        if (customImages.includes(img.src)) {
-          customImages = customImages.filter(src => src !== img.src);
-          img.style.border = '2px solid transparent';
-        } else {
-          if (customImages.length < 4) {
-            customImages.push(img.src);
-            img.style.border = '4px solid #D4AF37'; 
-          } else {
-            alert("You can only select 4 poses. Tap one to remove it first.");
-          }
-        }
-        
-        startCaptureBtn.textContent = `Start Camera (${customImages.length}/4 Selected)`;
-        startCaptureBtn.disabled = customImages.length !== 4;
-      };
-      preSelectorGrid.appendChild(img);
-    });
-  }
-
-  function beginSequence() {
-    active = true;
-    photos = [];
-    currentIndex = 0;
-    showPose(0);
-    updateProgressDots();
-    
-    if (window.CountdownModule) {
-      setTimeout(() => CountdownModule.start(), 1000);
+  updateOverlay() {
+    if (!this.poses.length) return;
+    const file = this.poses[this.currentIndex];
+    if (this.imgEl) {
+      this.imgEl.src = `assets/poses/${file}`;
+      this.imgEl.style.display = 'block';
     }
-  }
-
-  function showPose(index) {
-    if (index < 0 || index >= POSES.length) return;
-    currentIndex = index;
-    badgeEl.textContent = POSES[index].title;
-    instructionEl.textContent = POSES[index].instruction;
-    
-    guideImgEl.src = customImages[index];
-    guideImgEl.style.display = 'block'; 
-
-    updateProgressDots();
-    updateRetakeButton();
-  }
-
-  function advance() {
-    if (!active) return;
-    if (currentIndex < POSES.length - 1) {
-      showPose(currentIndex + 1);
-    } else {
-      active = false;
-      if (window.CountdownModule) CountdownModule.finishSequence();
+    if (this.badgeEl) {
+      this.badgeEl.textContent = `POSE ${this.currentIndex + 1} OF ${this.poses.length}`;
     }
-  }
+    if (this.instrEl) {
+      this.instrEl.textContent = 'Copy the reference image!';
+    }
+  },
 
-  function skip() {
-    if (!active) return;
-    if (window.CountdownModule) CountdownModule.startManual();
-  }
+  next() {
+    if (this.currentIndex < this.poses.length - 1) {
+      this.currentIndex++;
+      this.updateOverlay();
+    }
+  },
 
-  function retake() {
-    if (!active) return;
-    photos[currentIndex] = null;
-    updateProgressDots();
-    updateRetakeButton();
-    showPose(currentIndex);
-    if (window.CountdownModule) CountdownModule.start();
-  }
+  reset() {
+    this.currentIndex = 0;
+  },
+};
 
-  function reset() {
-    active = false;
-    photos = [];
-    customImages = [];
-    currentIndex = 0;
-    buildPreSelectionGrid();
-    startCaptureBtn.textContent = `Start Camera (0/4 Selected)`;
-    startCaptureBtn.disabled = true;
-    progressDots.forEach(dot => dot.classList.remove('done', 'active'));
-    retakeBtn.disabled = true;
-  }
-
-  if (startCaptureBtn) {
-    startCaptureBtn.addEventListener('click', () => {
-      window.showScreen('camera-screen');
-      if (window.CameraModule) window.CameraModule.start();
-      beginSequence();
-    });
-  }
-
-  return {
-    getCurrentIndex, getPhotos, setPhoto, getCustomImages,
-    beginSequence, advance, skip, retake, reset, showPose,
-    buildPreSelectionGrid, isActive: () => active,
-  };
-})();
-
-window.PoseGuideModule = PoseGuideModule;
+document.addEventListener('DOMContentLoaded', () => PoseGuide.init());
+window.PoseGuide = PoseGuide;
