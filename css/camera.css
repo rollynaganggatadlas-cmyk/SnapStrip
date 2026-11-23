@@ -544,3 +544,17 @@
   max-width: 340px;
 }
 .final-actions .btn { width: 100%; }
+
+/* Pre-Selection Grid */
+.selector-item {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+.selector-item:hover {
+  transform: scale(1.05);
+}
