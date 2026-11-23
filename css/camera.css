@@ -130,19 +130,22 @@
 
 .pose-guide-img {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -58%);
-  width: 46%;
-  max-width: 240px;
-  opacity: 0.9;
+  bottom: 90px;          /* above the pose instruction */
+  right: 14px;           /* bottom-right corner */
+  width: 26%;            /* much smaller */
+  max-width: 130px;
+  opacity: 0.85;
   filter: drop-shadow(0 4px 16px rgba(0,0,0,0.55));
   animation: guideFloat 3s ease-in-out infinite;
   pointer-events: none;
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.3);
+  padding: 4px;
 }
 @keyframes guideFloat {
-  0%, 100% { transform: translate(-50%, -58%) scale(1); }
-  50% { transform: translate(-50%, -62%) scale(1.03); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.02); }
 }
 
 /* Countdown */
