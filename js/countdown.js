@@ -7,7 +7,7 @@ const Countdown = {
   numEl: null,
   timer: null,
   running: false,
-  value: 5,
+  value: 5, // Starts at 5
 
   init() {
     this.overlay = document.getElementById('countdown-overlay');
@@ -31,7 +31,7 @@ const Countdown = {
       this.value--;
       this.timer = setTimeout(() => this.tick(), 1000);
     } else {
-      this.value = 3;
+      this.value = 5; // <--- FIXED: Resets to 5 instead of 3
       this.overlay.classList.remove('visible');
       if (window.Capture) Capture.take();
     }
