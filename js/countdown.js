@@ -93,20 +93,15 @@ const CountdownModule = (() => {
       hint.textContent = 'Get ready — the countdown starts automatically.';
       PoseGuideModule.advance();
 
-      const photos = PoseGuideModule.getPhotos();
+          const photos = PoseGuideModule.getPhotos();
       const complete = photos.length === 4 && photos.every(Boolean);
       
       if (complete) {
         finishSequence();
       } else {
-        // Auto-start next pose countdown
-        const nextIdx = PoseGuideModule.getCurrentIndex();
-        if (nextIdx < 4 && !photos[nextIdx]) {
-          setTimeout(() => start(), 1000);
-        }
+        // Auto-start next pose countdown after 1 second
+        setTimeout(() => start(), 1000);
       }
-    }, 500);
-  }
 
   function finishSequence() {
     hint.textContent = 'All done! Preparing your strip…';
