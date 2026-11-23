@@ -1,10 +1,12 @@
 /* ============================================================
-   SnapStrip – Photo strip rendering (preview + final)
+   SnapStrip – Advanced Photo Strip Generation
+   Includes side-by-side references, cinema frames, and filters.
    ============================================================ */
 
 const PhotoStrip = {
   width: 1200,
-  height: 1500,
+  height: 1800, // Taller to accommodate the 2-column layout
+  imagesCache: {}, // Cache reference images so they load instantly
 
   init() {
     const titleInput = document.getElementById('strip-title');
@@ -12,22 +14,40 @@ const PhotoStrip = {
     if (titleInput) titleInput.addEventListener('input', () => this.renderPreview());
     if (dateToggle) dateToggle.addEventListener('change', () => this.renderPreview());
     this.renderFrames();
+    this.preloadReferences();
+  },
+
+  // Preload the reference images so they don't flicker when generating
+  preloadReferences() {
+    if (!window.App || !App.state.selectedPoses) return;
+    App.state.selectedPoses.forEach(file => {
+      const img = new Image();
+      img.src = `assets/poses/${file}`;
+      this.imagesCache[file] = img;
+    });
   },
 
   renderFrames() {
     const grid = document.getElementById('frame-grid');
     if (!grid) return;
+    
+    // The new frame styles
     const frames = [
-      { id: 'classic', name: 'Classic', color: '#FFF8E7' },
-      { id: 'red', name: 'Red', color: '#B22222' },
-      { id: 'green', name: 'Green', color: '#174B35' },
+      { id: 'classic', name: 'Classic', swatch: 'swatch-classic', color: '#FFF8E7', text: '#174B35' },
+      { id: 'red', name: 'Red', swatch: 'swatch-red', color: '#B22222', text: '#FFF8E7' },
+      { id: 'green', name: 'Green', swatch: 'swatch-green', color: '#174B35', text: '#FFF8E7' },
+      { id: 'cinema', name: 'Cinema', swatch: 'swatch-cinema', color: '#000000', text: '#FFFFFF' },
+      { id: 'vintage', name: 'Vintage', swatch: 'swatch-vintage', color: '#E6D5B8', text: '#75513B' },
     ];
+    
     this.frameId = 'classic';
     grid.innerHTML = '';
+    
     frames.forEach(f => {
       const chip = document.createElement('div');
       chip.className = 'frame-chip' + (f.id === this.frameId ? ' active' : '');
-      chip.innerHTML = `<span class="frame-swatch" style="background:${f.color}"></span><span>${f.name}</span>`;
+      chip.innerHTML = `<div class="frame-swatch ${f.swatch}"></div><span>${f.name}</span>`;
+      
       chip.addEventListener('click', () => {
         this.frameId = f.id;
         grid.querySelectorAll('.frame-chip').forEach(c => c.classList.remove('active'));
@@ -38,10 +58,14 @@ const PhotoStrip = {
     });
   },
 
-  getFrameColor() {
-    if (this.frameId === 'red') return '#B22222';
-    if (this.frameId === 'green') return '#174B35';
-    return '#FFF8E7';
+  getFrameStyle() {
+    return {
+      classic: { bg: '#FFF8E7', text: '#174B35', border: '#D4AF37' },
+      red: { bg: '#B22222', text: '#FFF8E7', border: '#8B1A1A' },
+      green: { bg: '#174B35', text: '#FFF8E7', border: '#23684A' },
+      cinema: { bg: '#000000', text: '#FFFFFF', border: '#333333' },
+      vintage: { bg: '#E6D5B8', text: '#75513B', border: '#8B6B4A' }
+    }[this.frameId] || { bg: '#FFF8E7', text: '#174B35', border: '#D4AF37' };
   },
 
   renderPreview() {
@@ -54,74 +78,98 @@ const PhotoStrip = {
     canvas.width = this.width;
     canvas.height = this.height;
     const ctx = canvas.getContext('2d');
-    const frameColor = this.getFrameColor();
-    const isDark = frameColor === '#174B35' || frameColor === '#B22222';
-    const textColor = isDark ? '#FFF8E7' : '#174B35';
-
-    // Background
-    ctx.fillStyle = frameColor;
+    const style = this.getFrameStyle();
+    const captures = window.App ? App.state.captures : [];
+    const references = window.App ? App.state.selectedPoses : [];
+    
+    // 1. Draw Background
+    ctx.fillStyle = style.bg;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // Border inset
-    ctx.strokeStyle = isDark ? 'rgba(255,248,231,0.5)' : 'rgba(178,34,34,0.5)';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(20, 20, this.width - 40, this.height - 40);
+    // Draw Cinema Bars if Cinema is selected
+    if (this.frameId === 'cinema') {
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, this.width, 120); // Top bar
+      ctx.fillRect(0, this.height - 120, this.width, 120); // Bottom bar
+    } else {
+      // Standard Border
+      ctx.strokeStyle = style.border;
+      ctx.lineWidth = 12;
+      ctx.strokeRect(30, 30, this.width - 60, this.height - 60);
+    }
 
-    // Photos (4 slots, 2x2 grid)
-    const padding = 50;
-    const gap = 24;
-    const photoW = (this.width - padding * 2 - gap) / 2;
-    const photoH = photoW * 0.75;
-    const startY = 180;
-    const captures = App.state.captures;
+    // 2. Setup Layout (2 Columns)
+    const padding = 60;
+    const gap = 20;
+    // We want photos on left, references on right
+    const colW = (this.width - padding * 2 - gap) / 2;
+    const rowH = (this.height - padding * 2 - 200 - gap * 3) / 4; // 4 rows, leave 200px for title/date
+    const startY = 160; // Space for Title
 
-    ctx.save();
-    ctx.filter = Filters.getCSS();
+    // 3. Draw Title
+    const title = (document.getElementById('strip-title')?.value || 'Merry Christmas').trim();
+    ctx.fillStyle = style.text;
+    ctx.font = '700 64px "Mountains of Christmas", cursive';
+    ctx.textAlign = 'center';
+    ctx.fillText(title || 'Merry Christmas', this.width / 2, 100);
+
+    // 4. Draw Photos and References
     for (let i = 0; i < 4; i++) {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const x = padding + col * (photoW + gap);
-      const y = startY + row * (photoH + gap);
+      const y = startY + i * (rowH + gap);
 
-      ctx.fillStyle = 'rgba(0,0,0,0.15)';
-      ctx.fillRect(x, y, photoW, photoH);
+      // --- LEFT COLUMN: CAPTURED PHOTO ---
+      const photoX = padding;
+      const refX = padding + colW + gap;
+
+      // Draw Photo Box
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(photoX, y, colW, rowH);
 
       if (captures[i]) {
         const img = new Image();
         img.src = captures[i];
-        if (img.complete) {
-          this.drawImageCover(ctx, img, x, y, photoW, photoH);
-        } else {
-          img.onload = () => {
-            this.drawImageCover(ctx, img, x, y, photoW, photoH);
-          };
-        }
+        // Since captures are already dataURLs, they load instantly
+        this.drawImageCover(ctx, img, photoX, y, colW, rowH);
       }
+
+      // --- RIGHT COLUMN: REFERENCE IMAGE ---
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(refX, y, colW, rowH);
+
+      if (references[i] && this.imagesCache[references[i]]) {
+        const refImg = this.imagesCache[references[i]];
+        this.drawImageCover(ctx, refImg, refX, y, colW, rowH);
+      }
+
+      // Draw a subtle divider line between photo and ref
+      ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(this.width / 2, y);
+      ctx.lineTo(this.width / 2, y + rowH);
+      ctx.stroke();
     }
-    ctx.restore();
 
-    // Title
-    const title = (document.getElementById('strip-title')?.value || 'Merry Christmas').trim();
-    ctx.fillStyle = textColor;
-    ctx.font = '700 56px "Mountains of Christmas", cursive';
-    ctx.textAlign = 'center';
-    ctx.fillText(title || 'Merry Christmas', this.width / 2, 110);
-
-    // Date
+    // 5. Draw Date
     if (document.getElementById('show-date')?.checked) {
       const date = new Date().toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric',
       });
-      ctx.font = 'italic 400 32px "Playfair Display", serif';
-      ctx.fillStyle = isDark ? 'rgba(255,248,231,0.8)' : 'rgba(23,75,53,0.8)';
+      ctx.font = 'italic 400 36px "Playfair Display", serif';
+      ctx.fillStyle = this.frameId === 'cinema' ? 'rgba(255,255,255,0.6)' : (this.frameId === 'vintage' ? 'rgba(117,81,59,0.8)' : 'rgba(23,75,53,0.8)');
       ctx.fillText(date, this.width / 2, this.height - 60);
     }
   },
 
   drawImageCover(ctx, img, x, y, w, h) {
+    // Applies the filter directly to the canvas context for this specific draw
+    ctx.save();
+    ctx.filter = Filters.getCSS();
+    
     const imgRatio = img.width / img.height;
     const boxRatio = w / h;
     let sx, sy, sw, sh;
+    
     if (imgRatio > boxRatio) {
       sh = img.height;
       sw = sh * boxRatio;
@@ -133,7 +181,9 @@ const PhotoStrip = {
       sx = 0;
       sy = (img.height - sh) / 2;
     }
+    
     ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    ctx.restore();
   },
 
   generate() {
@@ -145,10 +195,10 @@ const PhotoStrip = {
 
 document.addEventListener('DOMContentLoaded', () => {
   PhotoStrip.init();
-  // Re-render preview when entering customize screen
   const observer = new MutationObserver(() => {
     const customize = document.getElementById('customize-screen');
     if (customize && customize.classList.contains('active')) {
+      PhotoStrip.preloadReferences();
       PhotoStrip.renderPreview();
     }
   });
