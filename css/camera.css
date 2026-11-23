@@ -561,3 +561,50 @@
 .selector-item:hover {
   transform: scale(1.05);
 }
+/* ---------- New Cinema Frames ---------- */
+.frame-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  background: rgba(255, 248, 231, 0.05);
+  border: 1.5px solid rgba(255, 248, 231, 0.18);
+  border-radius: 12px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.frame-chip:hover { border-color: rgba(212, 175, 55, 0.6); }
+.frame-chip.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.35);
+  color: var(--gold-light);
+}
+
+/* Preview Swatches for the new frames */
+.frame-swatch {
+  width: 100%;
+  height: 40px;
+  border-radius: 6px;
+  margin-bottom: 0.2rem;
+  position: relative;
+  overflow: hidden;
+}
+.swatch-classic { background: #FFF8E7; }
+.swatch-red { background: #B22222; }
+.swatch-green { background: #174B35; }
+.swatch-cinema { 
+  background: #000; 
+  border-top: 8px solid #000; 
+  border-bottom: 8px solid #000; 
+  position: relative;
+}
+.swatch-cinema::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #333, #111);
+}
+.swatch-vintage {
+  background: #E6D5B8;
+  border: 4px solid #8B6B4A;
+}
