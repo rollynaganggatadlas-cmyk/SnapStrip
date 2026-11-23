@@ -25,7 +25,7 @@ const ASSETS = [
   './assets/poses/meme4.jpg',
   './assets/poses/meme5.jpg',
   './assets/poses/meme6.jpg',
-  './assets/poses/meme 7.jpg',
+  './assets/poses/meme7.jpg',
   './assets/poses/meme8.jpg',
   './assets/poses/meme9.jpg',
   './assets/poses/meme10.jpg',
