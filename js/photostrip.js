@@ -4,7 +4,7 @@
 
 const PhotoStrip = {
   width: 1200,
-  height: 2400, // Taller canvas to fit 4 rows of side-by-side images
+  height: 2400,
   imagesCache: {}, 
 
   init() {
@@ -72,67 +72,55 @@ const PhotoStrip = {
   },
 
   draw(canvas) {
-    // Force the correct canvas size
     canvas.width = this.width;
     canvas.height = this.height;
     const ctx = canvas.getContext('2d');
     const style = this.getFrameStyle();
     
-    // Get data from App state
     const captures = window.App ? App.state.captures : [];
     const references = window.App ? App.state.selectedPoses : [];
     
-    // 1. Draw Background
     ctx.fillStyle = style.bg;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // Draw Frame Borders
     if (this.frameId === 'cinema') {
       ctx.fillStyle = '#111';
-      ctx.fillRect(0, 0, this.width, 150); // Top bar
-      ctx.fillRect(0, this.height - 150, this.width, 150); // Bottom bar
+      ctx.fillRect(0, 0, this.width, 150);
+      ctx.fillRect(0, this.height - 150, this.width, 150);
     } else {
       ctx.strokeStyle = style.border;
       ctx.lineWidth = 16;
       ctx.strokeRect(40, 40, this.width - 80, this.height - 80);
     }
 
-    // 2. Layout Math for Side-by-Side
     const padding = 80;
     const gap = 30;
-    // Split the width in half, minus the padding
     const colW = (this.width - padding * 2 - gap) / 2; 
-    // 4 rows, leaving room for the title and date
     const startY = 200; 
     const rowH = (this.height - startY - 200 - (gap * 3)) / 4; 
 
-    // 3. Draw Title
     const title = (document.getElementById('strip-title')?.value || 'Merry Christmas').trim();
     ctx.fillStyle = style.text;
     ctx.font = '700 80px "Mountains of Christmas", cursive';
     ctx.textAlign = 'center';
     ctx.fillText(title || 'Merry Christmas', this.width / 2, 130);
 
-    // 4. Draw Photos and References Side-by-Side
     for (let i = 0; i < 4; i++) {
       const y = startY + i * (rowH + gap);
 
       // --- LEFT SIDE: YOUR CAPTURED PHOTO ---
       const photoX = padding;
-      
       ctx.fillStyle = 'rgba(0,0,0,0.1)';
       ctx.fillRect(photoX, y, colW, rowH);
 
       if (captures[i]) {
         const img = new Image();
         img.src = captures[i];
-        // We draw immediately assuming the image is loaded (dataURLs load instantly)
         this.drawImageCover(ctx, img, photoX, y, colW, rowH);
       }
 
       // --- RIGHT SIDE: REFERENCE IMAGE ---
       const refX = padding + colW + gap;
-
       ctx.fillStyle = 'rgba(0,0,0,0.1)';
       ctx.fillRect(refX, y, colW, rowH);
 
@@ -141,7 +129,6 @@ const PhotoStrip = {
         this.drawImageCover(ctx, refImg, refX, y, colW, rowH);
       }
 
-      // Draw a divider line between them
       ctx.strokeStyle = 'rgba(0,0,0,0.15)';
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -150,7 +137,6 @@ const PhotoStrip = {
       ctx.stroke();
     }
 
-    // 5. Draw Date
     if (document.getElementById('show-date')?.checked) {
       const date = new Date().toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric',
@@ -163,10 +149,8 @@ const PhotoStrip = {
 
   drawImageCover(ctx, img, x, y, w, h) {
     ctx.save();
-    // Apply the selected filter to the context
     ctx.filter = Filters.getCSS();
     
-    // Math to crop the image nicely (like CSS object-fit: cover)
     const imgRatio = img.width / img.height;
     const boxRatio = w / h;
     let sx, sy, sw, sh;
@@ -197,7 +181,6 @@ const PhotoStrip = {
 document.addEventListener('DOMContentLoaded', () => {
   PhotoStrip.init();
   
-  // Re-render the preview automatically when the screen changes to Customize
   const observer = new MutationObserver(() => {
     const customize = document.getElementById('customize-screen');
     if (customize && customize.classList.contains('active')) {
