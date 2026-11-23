@@ -17,7 +17,6 @@
 </head>
 <body>
 
-  <!-- Snowfall Canvas (global decoration) -->
   <canvas id="snowfall" aria-hidden="true"></canvas>
 
   <!-- ============ LANDING PAGE ============ -->
@@ -48,10 +47,10 @@
       <div class="how-it-works">
         <h3>How it works</h3>
         <div class="steps">
-          <div class="step"><span class="step-num">1</span><span>Allow camera access</span></div>
-          <div class="step"><span class="step-num">2</span><span>Follow 4 fun poses</span></div>
-          <div class="step"><span class="step-num">3</span><span>Pick a filter &amp; frame</span></div>
-          <div class="step"><span class="step-num">4</span><span>Download your strip!</span></div>
+          <div class="step"><span class="step-num">1</span><span>Pick 4 poses</span></div>
+          <div class="step"><span class="step-num">2</span><span>Allow camera</span></div>
+          <div class="step"><span class="step-num">3</span><span>Match the poses</span></div>
+          <div class="step"><span class="step-num">4</span><span>Download strip!</span></div>
         </div>
       </div>
     </div>
@@ -59,6 +58,28 @@
     <footer class="landing-footer">
       <span>Made with 🎄 &amp; ❄️ for the holidays</span>
     </footer>
+  </section>
+
+  <!-- ============ POSE PRE-SELECTION SCREEN (NEW) ============ -->
+  <section id="pose-selection-screen" class="screen">
+    <header class="customize-header">
+      <button id="back-to-landing-from-select" class="icon-btn" aria-label="Back">←</button>
+      <h2>Select 4 Poses</h2>
+      <div class="spacer"></div>
+    </header>
+    <div class="customize-body" style="justify-content: center; align-items: flex-start;">
+      <div class="options-pane" style="max-width: 600px;">
+        <p style="text-align: center; margin-bottom: 1rem; color: rgba(255,255,255,0.7);">Tap 4 images below to use as your references. They will appear next to your photos!</p>
+        
+        <div class="selector-grid" id="pre-selector-grid" style="grid-template-columns: repeat(3, 1fr); max-height: 50vh; overflow-y: auto; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid rgba(255,255,255,0.1);">
+          <!-- Images injected by JS -->
+        </div>
+
+        <div class="option-actions" style="margin-top: 2rem;">
+          <button id="start-capture-btn" class="btn btn-primary btn-large" disabled>Start Camera (0/4 Selected)</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ============ CAMERA INTERFACE ============ -->
@@ -70,39 +91,33 @@
     </header>
 
     <div class="camera-stage">
-      <!-- Live video -->
       <div class="video-wrap" id="video-wrap">
         <video id="video" autoplay playsinline muted></video>
         <canvas id="flash-canvas" class="flash-canvas"></canvas>
 
-        <!-- Pose guide overlay -->
         <div class="pose-overlay" id="pose-overlay">
           <div class="pose-badge" id="pose-badge">POSE 1 OF 4</div>
-          <div class="pose-instruction" id="pose-instruction">Point at the camera and wink.</div>
-          <img class="pose-guide-img" id="pose-guide-img" src="assets/poses/pointing.svg" alt="Pose guide" draggable="false">
+          <div class="pose-instruction" id="pose-instruction">Copy the reference image!</div>
+          <img class="pose-guide-img" id="pose-guide-img" src="" alt="Pose guide" draggable="false">
         </div>
 
-        <!-- Countdown -->
         <div class="countdown-overlay" id="countdown-overlay" aria-live="polite">
           <span id="countdown-number"></span>
         </div>
 
-        <!-- Permission / error overlay -->
         <div class="camera-message" id="camera-message">
           <div class="message-card">
             <div class="message-icon" id="message-icon">📷</div>
             <h3 id="message-title">Camera access needed</h3>
-            <p id="message-text">We need your permission to use the camera so you can see yourself while posing.</p>
+            <p id="message-text">We need your permission to use the camera.</p>
             <button id="retry-camera" class="btn btn-primary">Enable Camera</button>
           </div>
         </div>
 
-        <!-- Capture counter -->
         <div class="capture-counter" id="capture-counter">0 / 4</div>
       </div>
     </div>
 
-    <!-- Controls -->
     <div class="camera-controls">
       <div class="progress-dots" id="progress-dots">
         <span class="dot" data-i="0"></span>
@@ -132,27 +147,21 @@
     </header>
 
     <div class="customize-body">
-      <!-- Left: preview of strip -->
       <div class="preview-pane">
         <div class="strip-preview-wrap">
-          <canvas id="strip-preview" width="600" height="1800"></canvas>
+          <canvas id="strip-preview" width="1200" height="1500"></canvas>
         </div>
       </div>
 
-      <!-- Right: options -->
       <div class="options-pane">
         <div class="option-group">
           <h3>Filter</h3>
-          <div class="filter-grid" id="filter-grid">
-            <!-- populated by JS -->
-          </div>
+          <div class="filter-grid" id="filter-grid"></div>
         </div>
 
         <div class="option-group">
           <h3>Frame</h3>
-          <div class="frame-grid" id="frame-grid">
-            <!-- populated by JS -->
-          </div>
+          <div class="frame-grid" id="frame-grid"></div>
         </div>
 
         <div class="option-group">
@@ -183,7 +192,7 @@
 
     <div class="final-body">
       <div class="final-preview-wrap">
-        <canvas id="strip-final" width="600" height="1800"></canvas>
+        <canvas id="strip-final" width="1200" height="1500"></canvas>
       </div>
 
       <div class="final-actions">
@@ -197,7 +206,6 @@
     </div>
   </section>
 
-  <!-- Hidden canvas used for raw frame capture -->
   <canvas id="capture-canvas" class="hidden"></canvas>
 
   <script src="js/app.js"></script>
