@@ -101,7 +101,9 @@ const App = {
   populatePoseSelector() {
     const memes = [
       'meme1.jpg','meme2.jpg','meme3.jpg','meme4.jpg','meme5.jpg',
-      'meme6.jpg','meme7.jpg','meme8.jpg','meme9.jpg','meme10.jpg'
+      'meme6.jpg','meme7.jpg','meme8.jpg','meme9.jpg','meme10.jpg','meme11.jpg','meme12.jpg',
+      'meme13.jpg','meme14.jpg','meme15.jpg','meme16.jpg','meme17.jpg','meme18.jpg','meme19.jpg',
+      'meme20.jpg'
     ];
     this.preSelectorGrid.innerHTML = '';
     this.state.selectedPoses = [];
