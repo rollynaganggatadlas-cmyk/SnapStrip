@@ -28,6 +28,16 @@ const ASSETS = [
   './assets/poses/meme8.jpg',
   './assets/poses/meme9.jpg',
   './assets/poses/meme10.jpg',
+   './assets/poses/meme11.jpg',
+   './assets/poses/meme12.jpg',
+   './assets/poses/meme13.jpg',
+   './assets/poses/meme14.jpg',
+   './assets/poses/meme15.jpg',
+   './assets/poses/meme16.jpg',
+   './assets/poses/meme17.jpg',
+   './assets/poses/meme18.jpg',
+   './assets/poses/meme19.jpg',
+   './assets/poses/meme20.jpg',
   './assets/icons/favicon.svg',
 ];
 
