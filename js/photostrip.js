@@ -3,14 +3,14 @@
    ============================================================ */
 
 const PhotoStripModule = (() => {
-  const STRIP_W = 1200;
-  const STRIP_H = 1500;
+    const STRIP_W = 1200;
+  const STRIP_H = 3000; // Make the canvas taller
   
-  const CELL_W = 560;
-  const CELL_H = 680;
+  const CELL_W = 560;   // Width of the photo/meme pair
+  const CELL_H = 680;   // Height of each row
   const GAP = 20;
   const MARGIN_X = 20;
-  const MARGIN_Y = 30;
+  const MARGIN_Y = 20;
 
   const previewCanvas = document.getElementById('strip-preview');
   const finalCanvas = document.getElementById('strip-final');
@@ -60,11 +60,11 @@ const PhotoStripModule = (() => {
     frame.draw(ctx);
 
     // 4 Grid Positions
-    const positions = [
-      { x: MARGIN_X, y: MARGIN_Y },                             
-      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y },              
-      { x: MARGIN_X, y: MARGIN_Y + CELL_H + GAP },              
-      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y + CELL_H + GAP }
+        const positions = [
+      { x: MARGIN_X, y: MARGIN_Y },                                     // Row 1
+      { x: MARGIN_X, y: MARGIN_Y + (CELL_H + GAP) },                    // Row 2
+      { x: MARGIN_X, y: MARGIN_Y + 2 * (CELL_H + GAP) },                // Row 3
+      { x: MARGIN_X, y: MARGIN_Y + 3 * (CELL_H + GAP) }                 // Row 4
     ];
 
     const loadPromises = [];
