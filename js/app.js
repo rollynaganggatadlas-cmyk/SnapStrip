@@ -1,6 +1,5 @@
 /* ============================================================
    SnapStrip – Main App Controller
-   Handles screen navigation, state, and button wiring
    ============================================================ */
 
 const App = {
@@ -33,18 +32,15 @@ const App = {
   },
 
   bindEvents() {
-    // Landing → Pose Selection
     this.startBtn.addEventListener('click', () => {
       this.populatePoseSelector();
       this.showScreen('pose-selection');
     });
 
-    // Back from pose selection
     this.backToLandingFromSelect.addEventListener('click', () => {
       this.showScreen('landing');
     });
 
-    // Start Camera (only enabled when 4 poses selected)
     this.startCaptureBtn.addEventListener('click', () => {
       if (this.state.selectedPoses.length === 4) {
         this.state.captures = [];
@@ -54,7 +50,6 @@ const App = {
       }
     });
 
-    // Back buttons
     this.backToLanding.addEventListener('click', () => {
       if (window.Camera) Camera.stop();
       this.showScreen('landing');
@@ -64,7 +59,6 @@ const App = {
       this.showScreen('camera');
     });
 
-    // Generate strip
     this.generateBtn.addEventListener('click', () => {
       if (window.PhotoStrip) {
         PhotoStrip.generate();
@@ -72,7 +66,6 @@ const App = {
       }
     });
 
-    // Retake photos
     this.retakePhotosBtn.addEventListener('click', () => {
       this.state.captures = [];
       this.state.currentCaptureIndex = 0;
@@ -81,7 +74,6 @@ const App = {
       if (window.Capture) Capture.reset();
     });
 
-    // Another strip
     this.anotherStripBtn.addEventListener('click', () => {
       this.state.captures = [];
       this.state.selectedPoses = [];
@@ -143,13 +135,12 @@ const App = {
     this.startCaptureBtn.textContent = `Start Camera (${count}/4 Selected)`;
     this.startCaptureBtn.disabled = count !== 4;
 
+    // Update Pose Guide
     if (window.PoseGuide) PoseGuide.setPoses(this.state.selectedPoses);
+    // Preload references for the strip generation
+    if (window.PhotoStrip) PhotoStrip.preloadReferences();
   },
 };
 
 document.addEventListener('DOMContentLoaded', () => App.init());
 window.App = App;
-    // ... existing code ...
-    if (window.PoseGuide) PoseGuide.setPoses(this.state.selectedPoses);
-    if (window.PhotoStrip) PhotoStrip.preloadReferences(); // ADD THIS LINE
-  },
