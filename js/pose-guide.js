@@ -4,10 +4,10 @@
 
 const PoseGuideModule = (() => {
   const POSES = [
-    { id: 'p1', title: 'POSE 1 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/pointing.svg' },
-    { id: 'p2', title: 'POSE 2 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/peace-sign.svg' },
-    { id: 'p3', title: 'POSE 3 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/finger-heart.svg' },
-    { id: 'p4', title: 'POSE 4 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/cute-pose.svg' }
+    { id: 'p1', title: 'POSE 1 OF 4', instruction: 'Copy the reference image!' },
+    { id: 'p2', title: 'POSE 2 OF 4', instruction: 'Copy the reference image!' },
+    { id: 'p3', title: 'POSE 3 OF 4', instruction: 'Copy the reference image!' },
+    { id: 'p4', title: 'POSE 4 OF 4', instruction: 'Copy the reference image!' }
   ];
 
   const GALLERY_REFERENCES = [
@@ -27,7 +27,7 @@ const PoseGuideModule = (() => {
   let currentIndex = 0;
   let photos = [];       
   let active = false;
-  let customImages = []; // Stores the 4 selected meme URLs
+  let customImages = []; 
 
   function getCurrentIndex() { return currentIndex; }
   function getPhotos() { return photos.slice(); }
@@ -52,7 +52,6 @@ const PoseGuideModule = (() => {
     retakeBtn.disabled = !canRetake;
   }
 
-  // Build the grid of 10 images for the Pre-Selection Screen
   function buildPreSelectionGrid() {
     preSelectorGrid.innerHTML = '';
     customImages = []; 
@@ -64,14 +63,12 @@ const PoseGuideModule = (() => {
       
       img.onclick = () => {
         if (customImages.includes(img.src)) {
-          // Deselect
           customImages = customImages.filter(src => src !== img.src);
           img.style.border = '2px solid transparent';
         } else {
-          // Select (max 4)
           if (customImages.length < 4) {
             customImages.push(img.src);
-            img.style.border = '4px solid #D4AF37'; // Gold border
+            img.style.border = '4px solid #D4AF37'; 
           } else {
             alert("You can only select 4 poses. Tap one to remove it first.");
           }
@@ -84,7 +81,6 @@ const PoseGuideModule = (() => {
     });
   }
 
-  // Called when they click "Start Camera"
   function beginSequence() {
     active = true;
     photos = [];
@@ -103,12 +99,7 @@ const PoseGuideModule = (() => {
     badgeEl.textContent = POSES[index].title;
     instructionEl.textContent = POSES[index].instruction;
     
-    // Use the selected meme, or fallback to the default SVG
-    if (customImages[index]) {
-      guideImgEl.src = customImages[index];
-    } else {
-      guideImgEl.src = POSES[index].image;
-    }
+    guideImgEl.src = customImages[index];
     guideImgEl.style.display = 'block'; 
 
     updateProgressDots();
