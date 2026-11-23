@@ -1,33 +1,27 @@
 /* ============================================================
-   SnapStrip – Pose guide system
+   SnapStrip – Pose guide system with Reference Gallery
    ============================================================ */
 
 const PoseGuideModule = (() => {
   const POSES = [
-    {
-      id: 'pointing',
-      title: 'POSE 1 OF 4',
-      instruction: 'Point at the camera and wink.',
-      image: 'assets/poses/pointing.svg',
-    },
-    {
-      id: 'peace',
-      title: 'POSE 2 OF 4',
-      instruction: 'Show your peace sign!',
-      image: 'assets/poses/peace-sign.svg',
-    },
-    {
-      id: 'heart',
-      title: 'POSE 3 OF 4',
-      instruction: 'Make a little heart with your fingers.',
-      image: 'assets/poses/finger-heart.svg',
-    },
-    {
-      id: 'cute',
-      title: 'POSE 4 OF 4',
-      instruction: 'Put your hands beside your cheeks and smile!',
-      image: 'assets/poses/cute-pose.svg',
-    },
+    { id: 'pointing', title: 'POSE 1 OF 4', instruction: 'Point at the camera and wink.', image: 'assets/poses/pointing.jpg' },
+    { id: 'peace', title: 'POSE 2 OF 4', instruction: 'Show your peace sign!', image: 'assets/poses/peace.jpg' },
+    { id: 'heart', title: 'POSE 3 OF 4', instruction: 'Make a little heart with your fingers.', image: 'assets/poses/heart.jpg' },
+    { id: 'cute', title: 'POSE 4 OF 4', instruction: 'Put your hands beside your cheeks and smile!', image: 'assets/poses/cute.jpg' },
+  ];
+
+  // 🔥 YOUR MEME IMAGES
+  const GALLERY_REFERENCES = [
+    'meme1.jpg',
+    'meme2.jpg',
+    'meme3.jpg',
+    'meme4.jpg',
+    'meme5.jpg',
+    'meme6.jpg',
+    'meme7.jpg',
+    'meme8.jpg',
+    'meme9.jpg',
+    'meme10.jpg'
   ];
 
   const badgeEl = document.getElementById('pose-badge');
@@ -35,11 +29,17 @@ const PoseGuideModule = (() => {
   const guideImgEl = document.getElementById('pose-guide-img');
   const progressDots = document.querySelectorAll('#progress-dots .dot');
   const retakeBtn = document.getElementById('retake-btn');
+  
+  const galleryModal = document.getElementById('gallery-modal');
+  const openGalleryBtn = document.getElementById('open-gallery-btn');
+  const closeGalleryBtn = document.getElementById('close-gallery-btn');
+  const galleryGrid = document.getElementById('gallery-grid');
 
   let currentIndex = 0;
-  let photos = [];       // data URLs of captured frames
-  let onComplete = null; // callback when 4 done
+  let photos = [];       
+  let onComplete = null; 
   let active = false;
+  let customImages = {}; 
 
   function getPoses() { return POSES; }
   function getCurrentIndex() { return currentIndex; }
@@ -61,7 +61,6 @@ const PoseGuideModule = (() => {
   }
 
   function updateRetakeButton() {
-    // Retake is available only if the current pose slot already has a photo
     const canRetake = !!photos[currentIndex] && active;
     retakeBtn.disabled = !canRetake;
   }
@@ -73,23 +72,56 @@ const PoseGuideModule = (() => {
 
     badgeEl.textContent = pose.title;
     instructionEl.textContent = pose.instruction;
-    guideImgEl.src = pose.image;
-    guideImgEl.alt = pose.instruction + ' guide';
+    
+    if (customImages[index]) {
+      guideImgEl.src = customImages[index];
+      guideImgEl.style.display = 'block';
+    } else {
+      guideImgEl.src = pose.image;
+      guideImgEl.style.display = 'block'; 
+    }
 
     updateProgressDots();
     updateRetakeButton();
   }
 
-    function start(callback) {
+  function buildGallery() {
+    galleryGrid.innerHTML = '';
+    GALLERY_REFERENCES.forEach(imgName => {
+      const img = document.createElement('img');
+      img.src = `assets/poses/${imgName}`;
+      img.className = 'gallery-item';
+      img.onclick = () => {
+        customImages[currentIndex] = img.src;
+        showPose(currentIndex);
+        closeGallery();
+      };
+      galleryGrid.appendChild(img);
+    });
+  }
+
+  function openGallery() { galleryModal.classList.remove('hidden'); }
+  function closeGallery() { galleryModal.classList.add('hidden'); }
+
+  if (openGalleryBtn) openGalleryBtn.addEventListener('click', openGallery);
+  if (closeGalleryBtn) closeGalleryBtn.addEventListener('click', closeGallery);
+  if (galleryModal) {
+    galleryModal.addEventListener('click', (e) => {
+      if (e.target === galleryModal) closeGallery();
+    });
+  }
+
+  function start(callback) {
     active = true;
     photos = [];
+    customImages = {}; 
     onComplete = callback || null;
     currentIndex = 0;
+    buildGallery(); 
     showPose(0);
     updateProgressDots();
     updateRetakeButton();
 
-    // 🔥 THIS IS THE FIX: Automatically start the countdown for Pose 1
     if (window.CountdownModule) {
       setTimeout(() => CountdownModule.start(), 1000);
     }
@@ -100,26 +132,18 @@ const PoseGuideModule = (() => {
     if (currentIndex < POSES.length - 1) {
       showPose(currentIndex + 1);
     } else {
-      // Finished all 4
       active = false;
       if (typeof onComplete === 'function') onComplete(photos.slice());
     }
   }
 
-  function skip() {
-    if (!active) return;
-    // If current pose has no photo, leave it empty (will be filled by a later retake).
-    // Move to next pose.
-    advance();
-  }
+  function skip() { if (!active) return; advance(); }
 
   function retake() {
     if (!active) return;
-    // Clear current photo and let user redo this pose
     photos[currentIndex] = null;
     updateProgressDots();
     updateRetakeButton();
-    // Re-show instruction and restart countdown
     showPose(currentIndex);
     if (window.CountdownModule) CountdownModule.start();
   }
@@ -127,11 +151,12 @@ const PoseGuideModule = (() => {
   function reset() {
     active = false;
     photos = [];
+    customImages = {};
     currentIndex = 0;
     onComplete = null;
     badgeEl.textContent = 'POSE 1 OF 4';
     instructionEl.textContent = 'Point at the camera and wink.';
-    guideImgEl.src = 'assets/poses/pointing.svg';
+    guideImgEl.src = 'assets/poses/pointing.jpg';
     progressDots.forEach(dot => dot.classList.remove('done', 'active'));
     retakeBtn.disabled = true;
   }
