@@ -2,7 +2,7 @@
    SnapStrip – Service Worker (offline caching)
    ============================================================ */
 
-const CACHE_NAME = 'snapstrip-christmas-v27';// 🔥 Bumped to v15
+const CACHE_NAME = 'snapstrip-christmas-v28'; // Bumped to v28!
 const ASSETS = [
   './',
   './index.html',
@@ -18,7 +18,6 @@ const ASSETS = [
   './js/filters.js',
   './js/photostrip.js',
   './js/download.js',
-  // Make sure these match the exact filenames in your folder!
   './assets/poses/meme1.jpg',
   './assets/poses/meme2.jpg',
   './assets/poses/meme3.jpg',
@@ -50,7 +49,6 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
-  // Network-first for navigation (so updates land), cache-first for assets
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req).catch(() => caches.match('./index.html'))
@@ -62,7 +60,6 @@ self.addEventListener('fetch', (event) => {
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
-        // Only cache same-origin successful responses
         if (res.ok && new URL(req.url).origin === location.origin) {
           const copy = res.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
