@@ -70,7 +70,7 @@ const Capture = {
     } else {
       if (window.PoseGuide) PoseGuide.next();
       if (window.Countdown) {
-        Countdown.value = 3;
+        Countdown.value = 5;
         setTimeout(() => Countdown.start(), 600);
       }
     }
