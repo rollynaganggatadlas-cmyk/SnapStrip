@@ -1,73 +1,106 @@
 /* ============================================================
-   SnapStrip – Frame capture from video to canvas
+   SnapStrip – Capture logic
    ============================================================ */
 
-const CaptureModule = (() => {
-  const captureCanvas = document.getElementById('capture-canvas');
-  const ctx = captureCanvas.getContext('2d');
+const Capture = {
+  canvas: null,
+  ctx: null,
+  counterEl: null,
+  retakeBtn: null,
+  skipBtn: null,
+  shootBtn: null,
+  dots: [],
+  max: 4,
 
-  const TARGET_W = 720;
-  const TARGET_H = 960; // 3:4 portrait
+  init() {
+    this.canvas = document.getElementById('capture-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.counterEl = document.getElementById('capture-counter');
+    this.retakeBtn = document.getElementById('retake-btn');
+    this.skipBtn = document.getElementById('skip-btn');
+    this.shootBtn = document.getElementById('shoot-btn');
+    this.dots = Array.from(document.querySelectorAll('.progress-dots .dot'));
 
-  function reset() {
-    // nothing persistent to reset; placeholder for symmetry
-  }
+    if (this.shootBtn) this.shootBtn.addEventListener('click', () => this.take());
+    if (this.retakeBtn) this.retakeBtn.addEventListener('click', () => this.retake());
+    if (this.skipBtn) this.skipBtn.addEventListener('click', () => this.goToCustomize());
+  },
 
-  /**
-   * Capture the current video frame and return a data URL (JPEG).
-   * Handles mirroring for front camera to match the preview.
-   */
-  function captureFrame() {
-    const video = window.CameraModule ? CameraModule.getVideo() : null;
-    if (!video || video.videoWidth === 0) return null;
+  reset() {
+    App.state.captures = [];
+    App.state.currentCaptureIndex = 0;
+    this.updateUI();
+    if (window.PoseGuide) {
+      PoseGuide.reset();
+      PoseGuide.updateOverlay();
+    }
+  },
 
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
+  take() {
+    if (App.state.captures.length >= this.max) return;
+    const video = document.getElementById('video');
+    if (!video || !video.videoWidth) return;
 
-    // Compute source crop to match 3:4 aspect ratio (cover)
-    const targetRatio = TARGET_W / TARGET_H;
-    const srcRatio = vw / vh;
+    this.canvas.width = video.videoWidth;
+    this.canvas.height = video.videoHeight;
+    this.ctx.save();
+    if (video.classList.contains('mirrored')) {
+      this.ctx.translate(this.canvas.width, 0);
+      this.ctx.scale(-1, 1);
+    }
+    this.ctx.drawImage(video, 0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.restore();
 
-    let sx, sy, sw, sh;
-    if (srcRatio > targetRatio) {
-      // video is wider than target — crop sides
-      sh = vh;
-      sw = Math.round(vh * targetRatio);
-      sx = Math.round((vw - sw) / 2);
-      sy = 0;
+    const dataURL = this.canvas.toDataURL('image/png');
+    App.state.captures.push(dataURL);
+
+    // Flash
+    const flash = document.getElementById('flash-canvas');
+    if (flash) {
+      flash.classList.remove('flash');
+      void flash.offsetWidth;
+      flash.classList.add('flash');
+    }
+
+    App.state.currentCaptureIndex = App.state.captures.length;
+    this.updateUI();
+
+    if (App.state.captures.length >= this.max) {
+      setTimeout(() => this.goToCustomize(), 600);
     } else {
-      // video is taller — crop top/bottom
-      sw = vw;
-      sh = Math.round(vw / targetRatio);
-      sx = 0;
-      sy = Math.round((vh - sh) / 2);
+      if (window.PoseGuide) PoseGuide.next();
+      if (window.Countdown) {
+        Countdown.value = 3;
+        setTimeout(() => Countdown.start(), 600);
+      }
     }
+  },
 
-    captureCanvas.width = TARGET_W;
-    captureCanvas.height = TARGET_H;
-    ctx.clearRect(0, 0, TARGET_W, TARGET_H);
+  retake() {
+    if (App.state.captures.length === 0) return;
+    App.state.captures.pop();
+    App.state.currentCaptureIndex = App.state.captures.length;
+    if (window.PoseGuide && PoseGuide.currentIndex > 0) PoseGuide.currentIndex--;
+    this.updateUI();
+  },
 
-    // Mirror horizontally if front camera (to match mirrored preview)
-    const facing = window.CameraModule ? CameraModule.getFacingMode() : 'user';
-    if (facing === 'user') {
-      ctx.save();
-      ctx.translate(TARGET_W, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-      ctx.restore();
-    } else {
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-    }
+  updateUI() {
+    const n = App.state.captures.length;
+    if (this.counterEl) this.counterEl.textContent = `${n} / ${this.max}`;
+    this.dots.forEach((d, i) => {
+      d.classList.toggle('done', i < n);
+      d.classList.toggle('active', i === n);
+    });
+    if (this.retakeBtn) this.retakeBtn.disabled = n === 0;
+    if (this.skipBtn) this.skipBtn.disabled = n < this.max;
+  },
 
-    try {
-      return captureCanvas.toDataURL('image/jpeg', 0.92);
-    } catch (e) {
-      console.error('toDataURL failed:', e);
-      return null;
-    }
-  }
+  goToCustomize() {
+    if (window.Countdown) Countdown.stop();
+    if (window.PhotoStrip) PhotoStrip.renderPreview();
+    App.showScreen('customize');
+  },
+};
 
-  return { captureFrame, reset };
-})();
-
-window.CaptureModule = CaptureModule;
+document.addEventListener('DOMContentLoaded', () => Capture.init());
+window.Capture = Capture;
