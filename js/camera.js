@@ -1,141 +1,61 @@
-
 /* ============================================================
-   SnapStrip – Camera module (MediaDevices API)
+   SnapStrip – Camera handling
    ============================================================ */
 
-const CameraModule = (() => {
-  const video = document.getElementById('video');
-  const videoWrap = document.getElementById('video-wrap');
-  const messageEl = document.getElementById('camera-message');
-  const messageTitle = document.getElementById('message-title');
-  const messageText = document.getElementById('message-text');
-  const messageIcon = document.getElementById('message-icon');
+const Camera = {
+  stream: null,
+  facingMode: 'user',
+  video: null,
+  messageEl: null,
+  retryBtn: null,
+  flipBtn: null,
 
-  let stream = null;
-  let facingMode = 'user'; // 'user' or 'environment'
-  let started = false;
+  init() {
+    this.video = document.getElementById('video');
+    this.messageEl = document.getElementById('camera-message');
+    this.retryBtn = document.getElementById('retry-camera');
+    this.flipBtn = document.getElementById('flip-camera');
 
-  function showMessage(icon, title, text) {
-    messageIcon.textContent = icon;
-    messageTitle.textContent = title;
-    messageText.textContent = text;
-    messageEl.classList.remove('hidden');
-  }
-  function hideMessage() {
-    messageEl.classList.add('hidden');
-  }
-
-  async function start() {
-    if (started && stream) {
-      // already running – just make sure video plays
-      if (video.paused) video.play().catch(() => {});
-      return;
+    if (this.retryBtn) {
+      this.retryBtn.addEventListener('click', () => this.start());
     }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showMessage('🚫', 'Camera not supported', 'Your browser does not support camera access. Try a modern browser on HTTPS.');
-      return;
+    if (this.flipBtn) {
+      this.flipBtn.addEventListener('click', () => this.flip());
     }
+  },
 
-    showMessage('📷', 'Requesting camera…', 'Please allow camera access in your browser.');
-    hideMessage(); // we'll only show on error, but keep the card ready
-
+  async start() {
     try {
-            const constraints = {
-        video: {
-          facingMode: { ideal: facingMode },
-          width: { ideal: 3840 },  // 4K resolution (phone will downscale to its max)
-          height: { ideal: 2160 }, // 4K resolution
-        },
+      if (this.stream) this.stop();
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: this.facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
         audio: false,
-      };
-
-      // Stop any existing stream first
-      stop();
-
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = stream;
-      video.setAttribute('playsinline', '');
-      video.muted = true;
-
-      await video.play().catch(() => {});
-
-      // Mirror front camera for natural selfie view
-      applyMirror();
-
-      started = true;
-      hideMessage();
+      });
+      this.video.srcObject = this.stream;
+      this.video.classList.toggle('mirrored', this.facingMode === 'user');
+      if (this.messageEl) this.messageEl.classList.add('hidden');
+      await this.video.play();
+      if (window.PoseGuide) PoseGuide.updateOverlay();
+      if (window.Countdown) Countdown.start();
     } catch (err) {
-      console.error('Camera error:', err);
-      let title = 'Camera access needed';
-      let text = 'We need your permission to use the camera so you can see yourself while posing.';
-      let icon = '📷';
-
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        title = 'Permission denied';
-        text = 'Camera access was blocked. Please enable it in your browser settings and try again.';
-        icon = '🚫';
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        title = 'No camera found';
-        text = 'We could not find a camera on this device. You can still try again.';
-        icon = '📵';
-      } else if (err.name === 'NotReadableError') {
-        title = 'Camera busy';
-        text = 'Your camera is being used by another app. Close it and try again.';
-        icon = '⚠️';
-      } else if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        title = 'Secure connection required';
-        text = 'Camera access requires HTTPS or localhost. Please open this site over HTTPS.';
-        icon = '🔒';
-      }
-      showMessage(icon, title, text);
+      console.error('[Camera] Error:', err);
+      if (this.messageEl) this.messageEl.classList.remove('hidden');
     }
-  }
+  },
 
-  function applyMirror() {
-    if (facingMode === 'user') {
-      video.classList.add('mirrored');
-    } else {
-      video.classList.remove('mirrored');
+  stop() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null;
     }
-  }
+    if (window.Countdown) Countdown.stop();
+  },
 
-  function stop() {
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
-    }
-    video.srcObject = null;
-    started = false;
-  }
+  flip() {
+    this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
+    this.start();
+  },
+};
 
-  async function flip() {
-    facingMode = facingMode === 'user' ? 'environment' : 'user';
-    const wasRunning = started;
-    stop();
-    if (wasRunning || document.getElementById('camera-screen').classList.contains('active')) {
-      await start();
-    }
-  }
-
-  function isReady() {
-    return !!stream && video.readyState >= 2 && video.videoWidth > 0;
-  }
-
-  function getVideo() { return video; }
-  function getStream() { return stream; }
-  function getFacingMode() { return facingMode; }
-
-  // Stop camera when leaving the page / tab hidden
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && started) {
-      // keep stream but pause playback; re-play when visible
-      video.pause();
-    } else if (!document.hidden && started) {
-      video.play().catch(() => {});
-    }
-  });
-
-  return { start, stop, flip, isReady, getVideo, getStream, getFacingMode };
-})();
-
-window.CameraModule = CameraModule;
+document.addEventListener('DOMContentLoaded', () => Camera.init());
+window.Camera = Camera;
