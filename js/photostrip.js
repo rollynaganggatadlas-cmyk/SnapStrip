@@ -1,209 +1,159 @@
 /* ============================================================
-   SnapStrip – 2x4 Grid Photo Strip Generator
+   SnapStrip – Photo strip rendering (preview + final)
    ============================================================ */
 
-const PhotoStripModule = (() => {
-  // Canvas size for the 2x4 grid
-  const STRIP_W = 1200;
-  const STRIP_H = 3000;
-  
-  const CELL_W = 560;
-  const CELL_H = 680;
-  const GAP = 20;
-  const MARGIN_X = 20;
-  const MARGIN_Y = 20;
+const PhotoStrip = {
+  width: 1200,
+  height: 1500,
 
-  const previewCanvas = document.getElementById('strip-preview');
-  const finalCanvas = document.getElementById('strip-final');
-  const previewCtx = previewCanvas.getContext('2d');
-  const finalCtx = finalCanvas.getContext('2d');
+  init() {
+    const titleInput = document.getElementById('strip-title');
+    const dateToggle = document.getElementById('show-date');
+    if (titleInput) titleInput.addEventListener('input', () => this.renderPreview());
+    if (dateToggle) dateToggle.addEventListener('change', () => this.renderPreview());
+    this.renderFrames();
+  },
 
-  previewCanvas.width = STRIP_W; previewCanvas.height = STRIP_H;
-  finalCanvas.width = STRIP_W; finalCanvas.height = STRIP_H;
-
-  const FRAMES = [
-    {
-      id: 'classic-blue', name: 'Classic Blue', bg: '#2A3B5C', text: '#FFFFFF', subText: '#A9B9D1',
-      swatch: 'linear-gradient(135deg,#2A3B5C,#1A263C)', draw: drawClassicBlue,
-    },
-    {
-      id: 'classic-red', name: 'Classic Red', bg: '#B22222', text: '#FFF8E7', subText: '#F0D77A',
-      swatch: 'linear-gradient(135deg,#B22222,#8B1A1A)', draw: drawClassicRed,
-    },
-    {
-      id: 'cinema', name: 'Cinema', bg: '#000000', text: '#FFF8E7', subText: '#888888',
-      swatch: 'linear-gradient(135deg,#000000,#333333)', draw: drawCinema,
-    },
-  ];
-
-  function getFrames() { return FRAMES; }
-  function getFrameById(id) { return FRAMES.find(f => f.id === id) || FRAMES[0]; }
-
-  function drawClassicBlue(ctx) {
-    ctx.fillStyle = '#2A3B5C'; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 6; ctx.strokeRect(15, 15, STRIP_W - 30, STRIP_H - 30);
-  }
-  function drawClassicRed(ctx) {
-    ctx.fillStyle = '#B22222'; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 10; ctx.strokeRect(20, 20, STRIP_W - 40, STRIP_H - 40);
-  }
-  function drawCinema(ctx) {
-    ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.fillStyle = '#111111'; ctx.fillRect(0, 0, STRIP_W, 60); ctx.fillRect(0, STRIP_H - 60, STRIP_W, 60);
-  }
-
-  function drawStrip(ctx, photos, opts) {
-    const frame = getFrameById(opts.frameId);
-    const filterId = opts.filterId || 'natural';
-    const title = opts.title || 'Merry Christmas';
-    const showDate = opts.showDate !== false;
-
-    frame.draw(ctx);
-
-    // 4 Rows (Top to Bottom)
-    const positions = [
-      { x: MARGIN_X, y: MARGIN_Y },                                     // Row 1
-      { x: MARGIN_X, y: MARGIN_Y + (CELL_H + GAP) },                    // Row 2
-      { x: MARGIN_X, y: MARGIN_Y + 2 * (CELL_H + GAP) },                // Row 3
-      { x: MARGIN_X, y: MARGIN_Y + 3 * (CELL_H + GAP) }                 // Row 4
-    ];
-
-    const loadPromises = [];
-
-    for (let i = 0; i < 4; i++) {
-      const userPhotoUrl = photos[i];
-      const memeUrl = opts.customImages[i];
-      const pos = positions[i];
-
-      // Left side (User Photo)
-      loadPromises.push(new Promise((resolve) => {
-        if (!userPhotoUrl) { resolve(); return; }
-        const img = new Image();
-        img.onload = () => {
-          ctx.save(); ctx.beginPath(); ctx.rect(pos.x, pos.y, (CELL_W/2)-2, CELL_H); ctx.clip();
-          
-          const imgRatio = img.width / img.height;
-          const slotRatio = (CELL_W/2) / CELL_H;
-          let sx, sy, sw, sh;
-          if (imgRatio > slotRatio) { sh = img.height; sw = sh * slotRatio; sx = (img.width - sw) / 2; sy = 0; }
-          else { sw = img.width; sh = sw / slotRatio; sx = 0; sy = (img.height - sh) / 2; }
-          
-          const f = FiltersModule.getById(filterId);
-          if (f.css && f.css !== 'none') ctx.filter = f.css;
-          ctx.drawImage(img, sx, sy, sw, sh, pos.x, pos.y, (CELL_W/2)-2, CELL_H);
-          ctx.restore(); resolve();
-        };
-        img.onerror = () => resolve(); img.src = userPhotoUrl;
-      }));
-
-      // Right side (Meme)
-      loadPromises.push(new Promise((resolve) => {
-        if (!memeUrl) { resolve(); return; }
-        const img = new Image();
-        img.onload = () => {
-          ctx.save(); ctx.beginPath(); ctx.rect(pos.x + (CELL_W/2) + 4, pos.y, (CELL_W/2)-2, CELL_H); ctx.clip();
-          
-          const imgRatio = img.width / img.height;
-          const slotRatio = (CELL_W/2) / CELL_H;
-          let sx, sy, sw, sh;
-          if (imgRatio > slotRatio) { sh = img.height; sw = sh * slotRatio; sx = (img.width - sw) / 2; sy = 0; }
-          else { sw = img.width; sh = sw / slotRatio; sx = 0; sy = (img.height - sh) / 2; }
-          
-          ctx.drawImage(img, sx, sy, sw, sh, pos.x + (CELL_W/2) + 4, pos.y, (CELL_W/2)-2, CELL_H);
-          ctx.restore(); resolve();
-        };
-        img.onerror = () => resolve(); img.src = memeUrl;
-      }));
-    }
-
-    return Promise.all(loadPromises).then(() => {
-      ctx.save();
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = '700 50px "Mountains of Christmas", "Playfair Display", cursive'; ctx.fillStyle = frame.text;
-      ctx.fillText(title, STRIP_W / 2, 40);
-      ctx.restore();
-
-      if (showDate) {
-        ctx.save();
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = '600 24px "Nunito", sans-serif'; ctx.fillStyle = frame.subText;
-        const now = new Date();
-        const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-        ctx.fillText(`${dateStr}  ·  ${timeStr}`, STRIP_W / 2, STRIP_H - 40);
-        ctx.restore();
-      }
-    });
-  }
-
-  function renderPreview() {
-    const photos = SnapStrip.state.photos.length ? SnapStrip.state.photos : PoseGuideModule.getPhotos();
-    const opts = {
-      frameId: SnapStrip.state.selectedFrame,
-      filterId: SnapStrip.state.selectedFilter,
-      title: SnapStrip.state.title,
-      showDate: SnapStrip.state.showDate,
-      customImages: PoseGuideModule.getCustomImages()
-    };
-    previewCtx.clearRect(0, 0, STRIP_W, STRIP_H);
-    drawStrip(previewCtx, photos, opts);
-  }
-
-  function generateFinal() {
-    const photos = SnapStrip.state.photos.length ? SnapStrip.state.photos : PoseGuideModule.getPhotos();
-    const opts = {
-      frameId: SnapStrip.state.selectedFrame,
-      filterId: SnapStrip.state.selectedFilter,
-      title: SnapStrip.state.title,
-      showDate: SnapStrip.state.showDate,
-      customImages: PoseGuideModule.getCustomImages()
-    };
-    finalCtx.clearRect(0, 0, STRIP_W, STRIP_H);
-    drawStrip(finalCtx, photos, opts);
-  }
-
-  function buildFilterGrid() {
-    const grid = document.getElementById('filter-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    FiltersModule.getFilters().forEach(f => {
-      const chip = document.createElement('button');
-      chip.className = 'filter-chip' + (SnapStrip.state.selectedFilter === f.id ? ' active' : '');
-      chip.dataset.filter = f.id;
-      chip.innerHTML = `<span class="filter-swatch" style="filter:${f.css};"></span><span>${f.name}</span>`;
-      chip.addEventListener('click', () => {
-        SnapStrip.state.selectedFilter = f.id;
-        grid.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        renderPreview();
-      });
-      grid.appendChild(chip);
-    });
-  }
-
-  function buildFrameGrid() {
+  renderFrames() {
     const grid = document.getElementById('frame-grid');
     if (!grid) return;
+    const frames = [
+      { id: 'classic', name: 'Classic', color: '#FFF8E7' },
+      { id: 'red', name: 'Red', color: '#B22222' },
+      { id: 'green', name: 'Green', color: '#174B35' },
+    ];
+    this.frameId = 'classic';
     grid.innerHTML = '';
-    FRAMES.forEach(f => {
-      const chip = document.createElement('button');
-      chip.className = 'frame-chip' + (SnapStrip.state.selectedFrame === f.id ? ' active' : '');
-      chip.dataset.frame = f.id;
-      chip.innerHTML = `<span class="frame-swatch" style="background:${f.swatch};"></span><span>${f.name}</span>`;
+    frames.forEach(f => {
+      const chip = document.createElement('div');
+      chip.className = 'frame-chip' + (f.id === this.frameId ? ' active' : '');
+      chip.innerHTML = `<span class="frame-swatch" style="background:${f.color}"></span><span>${f.name}</span>`;
       chip.addEventListener('click', () => {
-        SnapStrip.state.selectedFrame = f.id;
+        this.frameId = f.id;
         grid.querySelectorAll('.frame-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        renderPreview();
+        this.renderPreview();
       });
       grid.appendChild(chip);
     });
-  }
+  },
 
-  function init() { buildFilterGrid(); buildFrameGrid(); }
-  document.addEventListener('DOMContentLoaded', () => { init(); });
+  getFrameColor() {
+    if (this.frameId === 'red') return '#B22222';
+    if (this.frameId === 'green') return '#174B35';
+    return '#FFF8E7';
+  },
 
-  return { getFrames, getFrameById, renderPreview, generateFinal, init, STRIP_W, STRIP_H };
-})();
+  renderPreview() {
+    const canvas = document.getElementById('strip-preview');
+    if (!canvas) return;
+    this.draw(canvas);
+  },
 
-window.PhotoStripModule = PhotoStripModule;
+  draw(canvas) {
+    canvas.width = this.width;
+    canvas.height = this.height;
+    const ctx = canvas.getContext('2d');
+    const frameColor = this.getFrameColor();
+    const isDark = frameColor === '#174B35' || frameColor === '#B22222';
+    const textColor = isDark ? '#FFF8E7' : '#174B35';
+
+    // Background
+    ctx.fillStyle = frameColor;
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    // Border inset
+    ctx.strokeStyle = isDark ? 'rgba(255,248,231,0.5)' : 'rgba(178,34,34,0.5)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(20, 20, this.width - 40, this.height - 40);
+
+    // Photos (4 slots, 2x2 grid)
+    const padding = 50;
+    const gap = 24;
+    const photoW = (this.width - padding * 2 - gap) / 2;
+    const photoH = photoW * 0.75;
+    const startY = 180;
+    const captures = App.state.captures;
+
+    ctx.save();
+    ctx.filter = Filters.getCSS();
+    for (let i = 0; i < 4; i++) {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = padding + col * (photoW + gap);
+      const y = startY + row * (photoH + gap);
+
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(x, y, photoW, photoH);
+
+      if (captures[i]) {
+        const img = new Image();
+        img.src = captures[i];
+        if (img.complete) {
+          this.drawImageCover(ctx, img, x, y, photoW, photoH);
+        } else {
+          img.onload = () => {
+            this.drawImageCover(ctx, img, x, y, photoW, photoH);
+          };
+        }
+      }
+    }
+    ctx.restore();
+
+    // Title
+    const title = (document.getElementById('strip-title')?.value || 'Merry Christmas').trim();
+    ctx.fillStyle = textColor;
+    ctx.font = '700 56px "Mountains of Christmas", cursive';
+    ctx.textAlign = 'center';
+    ctx.fillText(title || 'Merry Christmas', this.width / 2, 110);
+
+    // Date
+    if (document.getElementById('show-date')?.checked) {
+      const date = new Date().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      });
+      ctx.font = 'italic 400 32px "Playfair Display", serif';
+      ctx.fillStyle = isDark ? 'rgba(255,248,231,0.8)' : 'rgba(23,75,53,0.8)';
+      ctx.fillText(date, this.width / 2, this.height - 60);
+    }
+  },
+
+  drawImageCover(ctx, img, x, y, w, h) {
+    const imgRatio = img.width / img.height;
+    const boxRatio = w / h;
+    let sx, sy, sw, sh;
+    if (imgRatio > boxRatio) {
+      sh = img.height;
+      sw = sh * boxRatio;
+      sx = (img.width - sw) / 2;
+      sy = 0;
+    } else {
+      sw = img.width;
+      sh = sw / boxRatio;
+      sx = 0;
+      sy = (img.height - sh) / 2;
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  },
+
+  generate() {
+    const finalCanvas = document.getElementById('strip-final');
+    if (!finalCanvas) return;
+    this.draw(finalCanvas);
+  },
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  PhotoStrip.init();
+  // Re-render preview when entering customize screen
+  const observer = new MutationObserver(() => {
+    const customize = document.getElementById('customize-screen');
+    if (customize && customize.classList.contains('active')) {
+      PhotoStrip.renderPreview();
+    }
+  });
+  document.querySelectorAll('.screen').forEach(s => {
+    observer.observe(s, { attributes: true, attributeFilter: ['class'] });
+  });
+});
+window.PhotoStrip = PhotoStrip;
