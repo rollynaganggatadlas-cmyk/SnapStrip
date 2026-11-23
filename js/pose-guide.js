@@ -4,10 +4,10 @@
 
 const PoseGuideModule = (() => {
   const POSES = [
-    { id: 'p1', title: 'POSE 1 OF 4', instruction: 'Copy the reference image!' },
-    { id: 'p2', title: 'POSE 2 OF 4', instruction: 'Copy the reference image!' },
-    { id: 'p3', title: 'POSE 3 OF 4', instruction: 'Copy the reference image!' },
-    { id: 'p4', title: 'POSE 4 OF 4', instruction: 'Copy the reference image!' }
+    { id: 'p1', title: 'POSE 1 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/pointing.svg' },
+    { id: 'p2', title: 'POSE 2 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/peace-sign.svg' },
+    { id: 'p3', title: 'POSE 3 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/finger-heart.svg' },
+    { id: 'p4', title: 'POSE 4 OF 4', instruction: 'Copy the reference image!', image: 'assets/poses/cute-pose.svg' }
   ];
 
   const GALLERY_REFERENCES = [
@@ -103,8 +103,12 @@ const PoseGuideModule = (() => {
     badgeEl.textContent = POSES[index].title;
     instructionEl.textContent = POSES[index].instruction;
     
-    // Show the meme they selected for this slot
-    guideImgEl.src = customImages[index];
+    // Use the selected meme, or fallback to the default SVG
+    if (customImages[index]) {
+      guideImgEl.src = customImages[index];
+    } else {
+      guideImgEl.src = POSES[index].image;
+    }
     guideImgEl.style.display = 'block'; 
 
     updateProgressDots();
