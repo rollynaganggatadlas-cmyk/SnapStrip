@@ -149,3 +149,7 @@ const App = {
 
 document.addEventListener('DOMContentLoaded', () => App.init());
 window.App = App;
+    // ... existing code ...
+    if (window.PoseGuide) PoseGuide.setPoses(this.state.selectedPoses);
+    if (window.PhotoStrip) PhotoStrip.preloadReferences(); // ADD THIS LINE
+  },
