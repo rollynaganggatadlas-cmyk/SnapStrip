@@ -2,7 +2,7 @@
    SnapStrip – Service Worker (offline caching)
    ============================================================ */
 
-const CACHE_NAME = 'snapstrip-christmas-v15'; // 🔥 Bumped to v15
+const CACHE_NAME = 'snapstrip-christmas-v16'; // 🔥 Bumped to v15
 const ASSETS = [
   './',
   './index.html',
