@@ -1,499 +1,229 @@
 /* ============================================================
-   SnapStrip – Christmas photo strip templates + Canvas generator
+   SnapStrip – 2x2 Grid Photo Strip Generator
    ============================================================ */
 
 const PhotoStripModule = (() => {
-  const STRIP_W = 600;
-  const STRIP_H = 1800;
-  const PHOTO_W = 520;
-  const PHOTO_H = 340;          // 520:340 ≈ 1.53 (landscape-ish, like classic strips)
-  const PHOTO_X = (STRIP_W - PHOTO_W) / 2;
-  const PHOTO_GAP = 22;
-  const TOP_MARGIN = 96;
-  const BOTTOM_MARGIN = 150;
+  // Canvas size for the 2x2 grid
+  const STRIP_W = 1200;
+  const STRIP_H = 1500;
+  
+  // Sizes for each cell
+  const CELL_W = 560;
+  const CELL_H = 680;
+  const GAP = 20;
+  const MARGIN_X = 20;
+  const MARGIN_Y = 30;
 
   const previewCanvas = document.getElementById('strip-preview');
   const finalCanvas = document.getElementById('strip-final');
   const previewCtx = previewCanvas.getContext('2d');
   const finalCtx = finalCanvas.getContext('2d');
 
-  // Ensure canvases are the right size
   previewCanvas.width = STRIP_W; previewCanvas.height = STRIP_H;
   finalCanvas.width = STRIP_W; finalCanvas.height = STRIP_H;
 
-  /* ---------------- Templates ---------------- */
   const FRAMES = [
+    {
+      id: 'classic-blue',
+      name: 'Classic Blue',
+      bg: '#2A3B5C',
+      text: '#FFFFFF',
+      subText: '#A9B9D1',
+      swatch: 'linear-gradient(135deg,#2A3B5C,#1A263C)',
+      draw: drawClassicBlue,
+    },
     {
       id: 'classic-red',
       name: 'Classic Red',
       bg: '#B22222',
-      border: '#D4AF37',
-      accent: '#FFF8E7',
       text: '#FFF8E7',
       subText: '#F0D77A',
       swatch: 'linear-gradient(135deg,#B22222,#8B1A1A)',
       draw: drawClassicRed,
     },
     {
-      id: 'forest-green',
-      name: 'Forest Green',
-      bg: '#174B35',
-      border: '#D4AF37',
-      accent: '#FFF8E7',
-      text: '#FFF8E7',
-      subText: '#F0D77A',
-      swatch: 'linear-gradient(135deg,#174B35,#0f2a1e)',
-      draw: drawForestGreen,
-    },
-    {
-      id: 'winter-wonderland',
-      name: 'Winter Wonderland',
-      bg: '#EAF2F8',
-      border: '#9FC5E8',
-      accent: '#2C3E50',
-      text: '#2C3E50',
-      subText: '#5D6D7E',
-      swatch: 'linear-gradient(135deg,#EAF2F8,#B8D4E8)',
-      draw: drawWinterWonderland,
-    },
-    {
-      id: 'golden-elegance',
-      name: 'Golden Elegance',
-      bg: '#1A1A1A',
-      border: '#D4AF37',
-      accent: '#F0D77A',
-      text: '#F0D77A',
-      subText: '#D4AF37',
-      swatch: 'linear-gradient(135deg,#2a2a2a,#D4AF37)',
-      draw: drawGoldenElegance,
-    },
-    {
-      id: 'gingerbread',
-      name: 'Gingerbread',
-      bg: '#8B5A2B',
-      border: '#F5DEB3',
-      accent: '#FFF8E7',
-      text: '#FFF8E7',
-      subText: '#F5DEB3',
-      swatch: 'linear-gradient(135deg,#8B5A2B,#C68B59)',
-      draw: drawGingerbread,
-    },
-    // 🔥 NEW FRAMES ADDED BELOW
-    {
       id: 'cinema',
       name: 'Cinema',
       bg: '#000000',
-      border: '#333333',
-      accent: '#FFF8E7',
       text: '#FFF8E7',
       subText: '#888888',
       swatch: 'linear-gradient(135deg,#000000,#333333)',
       draw: drawCinema,
     },
-    {
-      id: 'polaroid',
-      name: 'Polaroid',
-      bg: '#F4F4F4',
-      border: '#E0E0E0',
-      accent: '#333333',
-      text: '#333333',
-      subText: '#666666',
-      swatch: 'linear-gradient(135deg,#FFFFFF,#E0E0E0)',
-      draw: drawPolaroid,
-    },
-    {
-      id: 'neon-night',
-      name: 'Neon Night',
-      bg: '#0a0014',
-      border: '#ff00ff',
-      accent: '#00ffff',
-      text: '#00ffff',
-      subText: '#ff00ff',
-      swatch: 'linear-gradient(135deg,#0a0014,#ff00ff)',
-      draw: drawNeonNight,
-    }
   ];
 
   function getFrames() { return FRAMES; }
   function getFrameById(id) { return FRAMES.find(f => f.id === id) || FRAMES[0]; }
 
-  /* ---------------- Template drawing helpers ---------------- */
-
-  function drawSnowflakes(ctx, count, color, opacity) {
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.fillStyle = color;
-    for (let i = 0; i < count; i++) {
-      const x = Math.random() * STRIP_W;
-      const y = Math.random() * STRIP_H;
-      const r = Math.random() * 8 + 3;
-      drawSnowflakeShape(ctx, x, y, r);
-    }
-    ctx.restore();
+  // --- Template Backgrounds ---
+  function drawClassicBlue(ctx) {
+    ctx.fillStyle = '#2A3B5C';
+    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(15, 15, STRIP_W - 30, STRIP_H - 30);
   }
-
-  function drawSnowflakeShape(ctx, x, y, r) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, -r);
-      ctx.moveTo(0, -r * 0.55);
-      ctx.lineTo(-r * 0.35, -r * 0.8);
-      ctx.moveTo(0, -r * 0.55);
-      ctx.lineTo(r * 0.35, -r * 0.8);
-      ctx.rotate(Math.PI / 3);
-    }
-    ctx.strokeStyle = ctx.fillStyle;
-    ctx.lineWidth = 1.4;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawStars(ctx, count, color, opacity) {
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.fillStyle = color;
-    for (let i = 0; i < count; i++) {
-      const x = Math.random() * STRIP_W;
-      const y = Math.random() * STRIP_H;
-      const r = Math.random() * 5 + 2;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  function drawOrnaments(ctx, color) {
-    ctx.save();
-    ctx.fillStyle = color;
-    const spots = [
-      [40, 40], [STRIP_W - 40, 40], [40, STRIP_H - 40], [STRIP_W - 40, STRIP_H - 40],
-    ];
-    spots.forEach(([x, y]) => {
-      ctx.beginPath();
-      ctx.arc(x, y, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#D4AF37';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    });
-    ctx.restore();
-  }
-
-  /* ---------------- Template-specific background draws ---------------- */
 
   function drawClassicRed(ctx) {
     ctx.fillStyle = '#B22222';
     ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    // border
     ctx.strokeStyle = '#D4AF37';
     ctx.lineWidth = 10;
     ctx.strokeRect(20, 20, STRIP_W - 40, STRIP_H - 40);
-    ctx.strokeStyle = 'rgba(255,248,231,0.35)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(34, 34, STRIP_W - 68, STRIP_H - 68);
-    drawSnowflakes(ctx, 22, '#FFF8E7', 0.35);
-    drawStars(ctx, 12, '#F0D77A', 0.6);
-    drawOrnaments(ctx, '#D4AF37');
   }
-
-  function drawForestGreen(ctx) {
-    const g = ctx.createLinearGradient(0, 0, 0, STRIP_H);
-    g.addColorStop(0, '#1d5a3f');
-    g.addColorStop(1, '#0f2a1e');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.strokeStyle = '#D4AF37';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(24, 24, STRIP_W - 48, STRIP_H - 48);
-    // pine silhouettes at bottom
-    ctx.fillStyle = 'rgba(10,30,20,0.55)';
-    for (let i = 0; i < 7; i++) {
-      const bx = 50 + i * 80;
-      const by = STRIP_H - 60;
-      ctx.beginPath();
-      ctx.moveTo(bx, by - 60);
-      ctx.lineTo(bx - 30, by);
-      ctx.lineTo(bx + 30, by);
-      ctx.closePath();
-      ctx.fill();
-    }
-    drawSnowflakes(ctx, 20, '#FFF8E7', 0.4);
-    drawStars(ctx, 10, '#F0D77A', 0.55);
-  }
-
-  function drawWinterWonderland(ctx) {
-    const g = ctx.createLinearGradient(0, 0, 0, STRIP_H);
-    g.addColorStop(0, '#F4F9FC');
-    g.addColorStop(1, '#D6E6F2');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    ctx.strokeStyle = '#9FC5E8';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(24, 24, STRIP_W - 48, STRIP_H - 48);
-    drawSnowflakes(ctx, 26, '#5DADE2', 0.55);
-    drawStars(ctx, 14, '#2C3E50', 0.35);
-    // soft hills
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.beginPath();
-    ctx.moveTo(0, STRIP_H - 80);
-    ctx.quadraticCurveTo(STRIP_W / 2, STRIP_H - 140, STRIP_W, STRIP_H - 80);
-    ctx.lineTo(STRIP_W, STRIP_H);
-    ctx.lineTo(0, STRIP_H);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  function drawGoldenElegance(ctx) {
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    // gold double border
-    ctx.strokeStyle = '#D4AF37';
-    ctx.lineWidth = 12;
-    ctx.strokeRect(22, 22, STRIP_W - 44, STRIP_H - 44);
-    ctx.strokeStyle = 'rgba(240,215,122,0.5)';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(38, 38, STRIP_W - 76, STRIP_H - 76);
-    drawStars(ctx, 40, '#D4AF37', 0.7);
-    drawSnowflakes(ctx, 12, '#F0D77A', 0.35);
-    // corner flourishes
-    ctx.strokeStyle = '#D4AF37';
-    ctx.lineWidth = 2;
-    [[50, 50, 1, 1], [STRIP_W - 50, 50, -1, 1], [50, STRIP_H - 50, 1, -1], [STRIP_W - 50, STRIP_H - 50, -1, -1]].forEach(([x, y, sx, sy]) => {
-      ctx.beginPath();
-      ctx.moveTo(x, y + sy * 40);
-      ctx.quadraticCurveTo(x, y, x + sx * 40, y);
-      ctx.stroke();
-    });
-  }
-
-  function drawGingerbread(ctx) {
-    ctx.fillStyle = '#8B5A2B';
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    // gingerbread dots pattern
-    ctx.fillStyle = 'rgba(255,248,231,0.25)';
-    for (let y = 40; y < STRIP_H; y += 60) {
-      for (let x = 40; x < STRIP_W; x += 60) {
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.strokeStyle = '#F5DEB3';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(22, 22, STRIP_W - 44, STRIP_H - 44);
-    // candy dots corners
-    const candyColors = ['#FFF8E7', '#D4AF37', '#B22222', '#174B35'];
-    [[50, 50], [STRIP_W - 50, 50], [50, STRIP_H - 50], [STRIP_W - 50, STRIP_H - 50]].forEach(([x, y], i) => {
-      ctx.fillStyle = candyColors[i % candyColors.length];
-      ctx.beginPath();
-      ctx.arc(x, y, 12, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    drawSnowflakes(ctx, 10, '#FFF8E7', 0.3);
-  }
-
-  // 🔥 NEW DRAWING FUNCTIONS
 
   function drawCinema(ctx) {
-    // Solid black background
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    
-    // Top and bottom "Letterbox" bars
     ctx.fillStyle = '#111111';
-    ctx.fillRect(0, 0, STRIP_W, 80);
-    ctx.fillRect(0, STRIP_H - 80, STRIP_W, 80);
-    
-    // Subtle film grain (dots)
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
-    for(let i=0; i<500; i++) {
-      ctx.fillRect(Math.random() * STRIP_W, Math.random() * STRIP_H, 2, 2);
-    }
+    ctx.fillRect(0, 0, STRIP_W, 60);
+    ctx.fillRect(0, STRIP_H - 60, STRIP_W, 60);
   }
 
-  function drawPolaroid(ctx) {
-    // Vintage off-white background
-    ctx.fillStyle = '#F4F4F4';
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    
-    // Inner border
-    ctx.strokeStyle = '#D0D0D0';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(15, 15, STRIP_W - 30, STRIP_H - 30);
-    
-    // Tape effect at the top
-    ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-    ctx.fillRect(STRIP_W/2 - 60, 0, 120, 40);
-  }
-
-  function drawNeonNight(ctx) {
-    // Dark purple background
-    ctx.fillStyle = '#0a0014';
-    ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-    
-    // Glowing neon border
-    ctx.shadowColor = '#ff00ff';
-    ctx.shadowBlur = 20;
-    ctx.strokeStyle = '#ff00ff';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(20, 20, STRIP_W - 40, STRIP_H - 40);
-    
-    // Reset shadow
-    ctx.shadowBlur = 0;
-    
-    // Cyan inner accent line
-    ctx.strokeStyle = '#00ffff';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(35, 35, STRIP_W - 70, STRIP_H - 70);
-  }
-
-  /* ---------------- Strip composition ---------------- */
-
+  // --- Main Draw Function ---
   function drawStrip(ctx, photos, opts) {
     const frame = getFrameById(opts.frameId);
     const filterId = opts.filterId || 'natural';
     const title = opts.title || 'Merry Christmas';
     const showDate = opts.showDate !== false;
 
-    // 1. background
+    // 1. Draw background
     frame.draw(ctx);
 
-    // 2. photos
-    const positions = [];
-    for (let i = 0; i < 4; i++) {
-      const y = TOP_MARGIN + i * (PHOTO_H + PHOTO_GAP);
-      positions.push({ x: PHOTO_X, y, w: PHOTO_W, h: PHOTO_H });
-    }
+    // 2. Define the 4 grid positions (Top-Left, Top-Right, Bottom-Left, Bottom-Right)
+    const positions = [
+      { x: MARGIN_X, y: MARGIN_Y },                             // Top Left
+      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y },              // Top Right
+      { x: MARGIN_X, y: MARGIN_Y + CELL_H + GAP },              // Bottom Left
+      { x: MARGIN_X + CELL_W + GAP, y: MARGIN_Y + CELL_H + GAP }// Bottom Right
+    ];
 
-    const drawImagePromises = photos.slice(0, 4).map((dataUrl, i) => {
-      return new Promise((resolve) => {
-        if (!dataUrl) { resolve(); return; }
+    // 3. Load all images (User photos + Memes)
+    const poses = PoseGuideModule.getPoses();
+    const loadPromises = [];
+
+    for (let i = 0; i < 4; i++) {
+      const userPhotoUrl = photos[i];
+      const memeUrl = (opts.customImages && opts.customImages[i]) ? opts.customImages[i] : poses[i].image;
+      
+      const pos = positions[i];
+
+      // Left side (User Photo)
+      loadPromises.push(new Promise((resolve) => {
+        if (!userPhotoUrl) { resolve(); return; }
         const img = new Image();
         img.onload = () => {
-          const p = positions[i];
-          // photo shadow / white border
-          ctx.save();
-          ctx.fillStyle = 'rgba(0,0,0,0.25)';
-          ctx.fillRect(p.x + 4, p.y + 4, p.w, p.h);
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(p.x - 6, p.y - 6, p.w + 12, p.h + 12);
-          ctx.restore();
-
-          // clipped + filtered image
           ctx.save();
           ctx.beginPath();
-          ctx.rect(p.x, p.y, p.w, p.h);
+          ctx.rect(pos.x, pos.y, (CELL_W/2)-2, CELL_H);
           ctx.clip();
-          // cover-fit the photo inside the slot
+          
+          // Cover-fit
           const imgRatio = img.width / img.height;
-          const slotRatio = p.w / p.h;
+          const slotRatio = (CELL_W/2) / CELL_H;
           let sx, sy, sw, sh;
           if (imgRatio > slotRatio) {
-            sh = img.height;
-            sw = sh * slotRatio;
-            sx = (img.width - sw) / 2;
-            sy = 0;
+            sh = img.height; sw = sh * slotRatio;
+            sx = (img.width - sw) / 2; sy = 0;
           } else {
-            sw = img.width;
-            sh = sw / slotRatio;
-            sx = 0;
-            sy = (img.height - sh) / 2;
+            sw = img.width; sh = sw / slotRatio;
+            sx = 0; sy = (img.height - sh) / 2;
           }
-          FiltersModule.applyToContext(ctx, img, 0, 0, img.width, img.height, filterId);
-          // The above draws full image; we need to use source crop instead.
-          // Re-draw with proper crop:
-          ctx.clearRect(p.x, p.y, p.w, p.h);
-          ctx.save();
+          
           const f = FiltersModule.getById(filterId);
           if (f.css && f.css !== 'none') ctx.filter = f.css;
-          ctx.drawImage(img, sx, sy, sw, sh, p.x, p.y, p.w, p.h);
-          ctx.restore();
+          ctx.drawImage(img, sx, sy, sw, sh, pos.x, pos.y, (CELL_W/2)-2, CELL_H);
           ctx.restore();
           resolve();
         };
         img.onerror = () => resolve();
-        img.src = dataUrl;
-      });
-    });
+        img.src = userPhotoUrl;
+      }));
 
-    return Promise.all(drawImagePromises).then(() => {
-      // 3. title
+      // Right side (Reference Meme)
+      loadPromises.push(new Promise((resolve) => {
+        if (!memeUrl) { resolve(); return; }
+        const img = new Image();
+        img.onload = () => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(pos.x + (CELL_W/2) + 4, pos.y, (CELL_W/2)-2, CELL_H);
+          ctx.clip();
+          
+          // Cover-fit meme
+          const imgRatio = img.width / img.height;
+          const slotRatio = (CELL_W/2) / CELL_H;
+          let sx, sy, sw, sh;
+          if (imgRatio > slotRatio) {
+            sh = img.height; sw = sh * slotRatio;
+            sx = (img.width - sw) / 2; sy = 0;
+          } else {
+            sw = img.width; sh = sw / slotRatio;
+            sx = 0; sy = (img.height - sh) / 2;
+          }
+          
+          ctx.drawImage(img, sx, sy, sw, sh, pos.x + (CELL_W/2) + 4, pos.y, (CELL_W/2)-2, CELL_H);
+          ctx.restore();
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = memeUrl;
+      }));
+    }
+
+    return Promise.all(loadPromises).then(() => {
+      // 4. Draw Text
       ctx.save();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-
-      // top title
-      ctx.font = '700 46px "Mountains of Christmas", "Playfair Display", cursive';
+      ctx.font = '700 50px "Mountains of Christmas", "Playfair Display", cursive';
       ctx.fillStyle = frame.text;
-      ctx.shadowColor = 'rgba(0,0,0,0.35)';
-      ctx.shadowBlur = 6;
-      ctx.shadowOffsetY = 2;
-      ctx.fillText(title, STRIP_W / 2, 60);
+      ctx.fillText(title, STRIP_W / 2, 70);
       ctx.restore();
 
-      // 4. date / footer
       if (showDate) {
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = '600 20px "Nunito", sans-serif';
+        ctx.font = '600 24px "Nunito", sans-serif';
         ctx.fillStyle = frame.subText;
         const now = new Date();
         const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
         const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-        ctx.fillText(`${dateStr}  ·  ${timeStr}`, STRIP_W / 2, STRIP_H - 78);
+        ctx.fillText(`${dateStr}  ·  ${timeStr}`, STRIP_W / 2, STRIP_H - 50);
         ctx.restore();
       }
-
-      // 5. small footer mark
-      ctx.save();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = '700 16px "Nunito", sans-serif';
-      ctx.fillStyle = frame.subText;
-      ctx.globalAlpha = 0.85;
-      ctx.fillText('SNAPSTRIP  ·  CHRISTMAS EDITION', STRIP_W / 2, STRIP_H - 46);
-      ctx.restore();
     });
   }
 
-  /* ---------------- Preview & Final ---------------- */
-
+  // --- Preview & Final ---
   function renderPreview() {
-    const photos = SnapStrip.state.photos.length
-      ? SnapStrip.state.photos
-      : PoseGuideModule.getPhotos();
+    const photos = SnapStrip.state.photos.length ? SnapStrip.state.photos : PoseGuideModule.getPhotos();
     const opts = {
       frameId: SnapStrip.state.selectedFrame,
       filterId: SnapStrip.state.selectedFilter,
       title: SnapStrip.state.title,
       showDate: SnapStrip.state.showDate,
+      customImages: PoseGuideModule.getPhotos() // Pull the custom memes
     };
     previewCtx.clearRect(0, 0, STRIP_W, STRIP_H);
     drawStrip(previewCtx, photos, opts);
   }
 
   function generateFinal() {
-    const photos = SnapStrip.state.photos.length
-      ? SnapStrip.state.photos
-      : PoseGuideModule.getPhotos();
+    const photos = SnapStrip.state.photos.length ? SnapStrip.state.photos : PoseGuideModule.getPhotos();
     const opts = {
       frameId: SnapStrip.state.selectedFrame,
       filterId: SnapStrip.state.selectedFilter,
       title: SnapStrip.state.title,
       showDate: SnapStrip.state.showDate,
+      customImages: PoseGuideModule.getPhotos()
     };
     finalCtx.clearRect(0, 0, STRIP_W, STRIP_H);
     drawStrip(finalCtx, photos, opts);
   }
 
-  /* ---------------- Options UI building ---------------- */
-
+  // --- Build UI ---
   function buildFilterGrid() {
     const grid = document.getElementById('filter-grid');
     if (!grid) return;
@@ -537,16 +267,9 @@ const PhotoStripModule = (() => {
     buildFrameGrid();
   }
 
-  // Build options when DOM is ready
-  document.addEventListener('DOMContentLoaded', () => {
-    // Wait for fonts to be ready if possible
-    init();
-  });
+  document.addEventListener('DOMContentLoaded', () => { init(); });
 
-  return {
-    getFrames, getFrameById, renderPreview, generateFinal, init,
-    STRIP_W, STRIP_H,
-  };
+  return { getFrames, getFrameById, renderPreview, generateFinal, init, STRIP_W, STRIP_H };
 })();
 
 window.PhotoStripModule = PhotoStripModule;
