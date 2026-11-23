@@ -2,7 +2,7 @@
    SnapStrip – Service Worker (offline caching)
    ============================================================ */
 
-const CACHE_NAME = 'snapstrip-christmas-v14';
+const CACHE_NAME = 'snapstrip-christmas-v15'; // 🔥 Bumped to v15
 const ASSETS = [
   './',
   './index.html',
@@ -18,10 +18,17 @@ const ASSETS = [
   './js/filters.js',
   './js/photostrip.js',
   './js/download.js',
-  './assets/poses/pointing.svg',
-  './assets/poses/peace-sign.svg',
-  './assets/poses/finger-heart.svg',
-  './assets/poses/cute-pose.svg',
+  // Make sure these match the exact filenames in your folder!
+  './assets/poses/meme1.jpg',
+  './assets/poses/meme2.jpg',
+  './assets/poses/meme3.jpg',
+  './assets/poses/meme4.jpg',
+  './assets/poses/meme5.jpg',
+  './assets/poses/meme6.jpg',
+  './assets/poses/meme7.jpg',
+  './assets/poses/meme8.jpg',
+  './assets/poses/meme9.jpg',
+  './assets/poses/meme10.jpg',
   './assets/icons/favicon.svg',
 ];
 
