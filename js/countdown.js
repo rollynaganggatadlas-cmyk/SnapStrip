@@ -7,7 +7,7 @@ const Countdown = {
   numEl: null,
   timer: null,
   running: false,
-  value: 3,
+  value: 5,
 
   init() {
     this.overlay = document.getElementById('countdown-overlay');
