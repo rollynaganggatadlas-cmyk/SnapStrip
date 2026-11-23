@@ -39,7 +39,7 @@ const Countdown = {
 
   stop() {
     this.running = false;
-    this.value = 3;
+    this.value = 5;
     clearTimeout(this.timer);
     if (this.overlay) this.overlay.classList.remove('visible');
   },
